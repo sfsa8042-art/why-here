@@ -1,0 +1,24 @@
+# dependencies / build output
+node_modules/
+.next/
+dist/
+coverage/
+*.tsbuildinfo
+
+# environment files with secrets
+.env
+.env.*
+!.env.example
+
+# Claude / editor temporary files
+.claude/settings.local.json
+.claude/*.local.*
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
