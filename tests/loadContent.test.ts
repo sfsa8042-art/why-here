@@ -68,7 +68,17 @@ describe('production corpus', () => {
     expect(nl?.case.status).toBe('research');
     expect(nl?.researchQuestions.length).toBeGreaterThanOrEqual(1);
     expect(nl?.case).not.toHaveProperty('thesisClaimId');
-    expect(nl?.claims.length).toBe(10);
+    expect(nl?.claims.length).toBe(14);
+    // Pack 3: the directly inspected CORDIS record and its four claims
+    expect(result.corpus.sources.some((s) => s.id === 'nl-src-cordis-deepuv-2048')).toBe(true);
+    for (const id of [
+      'nl-f-deepuv-coordination',
+      'nl-f-deepuv-participants',
+      'nl-f-deepuv-objective',
+      'nl-f-deepuv-reported-results',
+    ]) {
+      expect(nl?.claims.some((c) => c.id === id), id).toBe(true);
+    }
     expect(nl?.claims.every(
       (c) => c.claimType === 'factual' || c.claimType === 'interpretive',
     )).toBe(true);

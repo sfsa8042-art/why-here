@@ -55,6 +55,32 @@ export const sources: Source[] = [
     url: 'https://asm.com/our-company/our-story',
   },
   /**
+   * Official EU project record (Research Pack 3), DIRECTLY INSPECTED
+   * this session at the URL below. Classified retrospective, not
+   * contemporaneous: the project metadata originated during the project
+   * period (1988-1991), but the currently inspected page is a later
+   * archival compilation — content archived 2024-04-16, last update
+   * 1-9-2025. Only directly inspected metadata is recorded here.
+   * Programme as printed: "European strategic programme (EEC) for
+   * research and development in information technologies (ESPRIT), 1987-1992"
+   * (FP2 / ESPRIT 2). The record publishes NO funding amount ("No
+   * data" for total cost and EU contribution). No second Source is
+   * created to simulate contemporaneous metadata; a contemporaneous
+   * documentary Source may be added only after an original project-era
+   * document is directly inspected.
+   */
+  {
+    id: 'nl-src-cordis-deepuv-2048',
+    title:
+      'Deep UV Lithography (DEEP-UV) — CORDIS project record, grant agreement 2048',
+    sourceType: 'documentary',
+    temporalRelation: 'retrospective',
+    subjectRelationship: 'independent',
+    lengthClass: 'short_form',
+    institution: 'European Commission (CORDIS)',
+    url: 'https://cordis.europa.eu/project/id/2048',
+  },
+  /**
    * Doctoral-thesis edition (Maastricht University, defense 22-11-2019).
    * subjectRelationship 'mixed', per dossier L19 and the Introduction's
    * "Historical resources" section: independent academic authorship and

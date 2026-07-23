@@ -330,4 +330,127 @@ export const claims: Claim[] = [
     ],
     lensFacets: [],
   },
+
+  /* ---------------- Research Pack 3 — DEEP-UV (CORDIS record) --------
+   * Source directly inspected this session. Claims 11-14 are factual
+   * statements about the official project record only: no causal
+   * connection to ASML's survival, no PAS 5500 link, no funding amount
+   * (none is published), no participant roles inferred. Reported
+   * prototype results are framed as record-reported, not as
+   * independently replicated measurements. */
+
+  /* 11 — coordination and run dates */
+  {
+    id: 'nl-f-deepuv-coordination',
+    caseId: CASE_ID,
+    claimType: 'factual',
+    statement:
+      'ASM Lithography coordinated the ESPRIT project "Deep UV Lithography" ' +
+      '(DEEP-UV, grant agreement 2048), which ran from 1 November 1988 to ' +
+      '31 October 1991.',
+    epistemicStatus: 'well_supported',
+    citations: [
+      {
+        sourceId: 'nl-src-cordis-deepuv-2048',
+        locator: { kind: 'section', value: 'Project Information' },
+        evidenceRole: 'supports',
+        note: 'Official project metadata: title, acronym, grant agreement ID 2048, start 1-11-1988, end 31-10-1991.',
+      },
+      {
+        sourceId: 'nl-src-cordis-deepuv-2048',
+        locator: { kind: 'section', value: 'Coordinator' },
+        evidenceRole: 'supports',
+        note: 'Official project metadata: coordinator "ASM LITHOGRAPHY" (Netherlands), as printed.',
+      },
+    ],
+    lensFacets: [],
+  },
+
+  /* 12 — participants (names copied exactly from the inspected record) */
+  {
+    id: 'nl-f-deepuv-participants',
+    caseId: CASE_ID,
+    claimType: 'factual',
+    statement:
+      'Nederlandse Philips Bedrijven BV and Carl Zeiss GmbH participated in ' +
+      'the DEEP-UV project alongside ASM Lithography as coordinator; the ' +
+      'consortium as listed also included Siemens AG, the Commissariat à ' +
+      'l’Energie Atomique (CEA), the Fraunhofer Institut für ' +
+      'Silicatforschung and Hoechst AG.',
+    epistemicStatus: 'well_supported',
+    citations: [
+      {
+        sourceId: 'nl-src-cordis-deepuv-2048',
+        locator: { kind: 'section', value: 'Participants' },
+        evidenceRole: 'supports',
+        note:
+          'Official project metadata. Participants exactly as printed on the ' +
+          'record: "CARL ZEISS GMBH" (DE), "Commissariat à l\'Energie ' +
+          'Atomique/CEA" (FR), "FRAUNHOFER INSTITUT FÜR SILICATFORSCHUNG" ' +
+          '(DE), "HOECHST AG" (DE), "NEDERLANDSE PHILIPS BEDRIJVEN BV" (NL), ' +
+          '"Siemens AG" (DE, two locations listed). The record states no ' +
+          'individual roles or contributions, and none are asserted.',
+      },
+    ],
+    lensFacets: [],
+  },
+
+  /* 13 — stated technical objective */
+  {
+    id: 'nl-f-deepuv-objective',
+    caseId: CASE_ID,
+    claimType: 'factual',
+    statement:
+      'The DEEP-UV project’s stated objective was to develop deep-ultraviolet ' +
+      'lithography — a wafer stepper with excimer laser (248 nm) ' +
+      'illumination — for semiconductor production with minimum features ' +
+      'below 0.5 micrometres, with work extending toward 0.25 micrometres.',
+    epistemicStatus: 'well_supported',
+    citations: [
+      {
+        sourceId: 'nl-src-cordis-deepuv-2048',
+        locator: { kind: 'section', value: 'Objective' },
+        evidenceRole: 'supports',
+        note:
+          'Stated project objective, as published: "production capability for ' +
+          'minimum details below 0.5 micron in the early 1990s, with the ' +
+          'potential to extend down to 0.25 micron in the mid-1990s"; deep UV ' +
+          'wafer stepper with excimer laser (248 nm) illumination. A ' +
+          'statement of the official objective — not an assertion that the ' +
+          'objective was fully achieved commercially.',
+      },
+    ],
+    lensFacets: [],
+  },
+
+  /* 14 — record-reported prototype results */
+  {
+    id: 'nl-f-deepuv-reported-results',
+    caseId: CASE_ID,
+    claimType: 'factual',
+    statement:
+      'The CORDIS project record reports that the project realized and ' +
+      'tested a deep-UV stepper prototype featuring 5x reduction all-quartz ' +
+      'optics and a through-the-lens alignment system with direct reference ' +
+      'to the reticle, with overlay accuracy better than 125 nm and later 60 ' +
+      'nm, and resolution of 0.35 micrometres with single-layer resist and ' +
+      '0.25 micrometres with top-surface imaging resist.',
+    epistemicStatus: 'well_supported',
+    citations: [
+      {
+        sourceId: 'nl-src-cordis-deepuv-2048',
+        locator: { kind: 'section', value: 'Objective' },
+        evidenceRole: 'supports',
+        note:
+          'Project-reported results. The record has no separate results ' +
+          'heading; the results paragraphs ("A prototype of the deep ' +
+          'ultraviolet (UV) stepper was realized and tested…") appear within ' +
+          'the Objective section. These are the project’s own reported ' +
+          'outcomes as compiled by CORDIS, not independently replicated ' +
+          'technical measurements.',
+      },
+    ],
+    lensFacets: [],
+  },
+
 ];
