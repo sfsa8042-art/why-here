@@ -1,92 +1,54 @@
 /**
- * scripts/validate-content.ts — Increment 2.
+ * scripts/validate-content.ts — Increment 3.
  *
- * Runs both validation layers (Zod schema parse, then the cross-entity
- * validator) and exits non-zero on any failure. Wired to `prebuild`, so
- * a failing corpus blocks `next build`.
+ * The real production pipeline, run by `prebuild` before `next build`:
+ *   1. load the production content registry (content/index.ts);
+ *   2. parse every registered entity through the authoritative Zod
+ *      schemas, with failures attributed to their originating module;
+ *   3. run the Increment 2 cross-entity validator (V1–V20);
+ *   4. print a concise corpus summary;
+ *   5. exit non-zero on any loading, schema or validation failure.
  *
- * Until the Increment 3 content loader exists there is no real research
- * content to load; the pipeline is exercised against the valid synthetic
- * fixture case so that the command, exit codes and reporting are real
- * from day one. The loader will replace the fixture import, not this
- * structure.
+ * Synthetic fixtures (content/__fixtures__/) are test-only and are
+ * never consulted here.
  */
 
-import {
-  AlternativeExplanationSchema,
-  CaseSchema,
-  ClaimSchema,
-  MechanismEdgeSchema,
-  MechanismNodeSchema,
-  ResearchQuestionSchema,
-  SourceSchema,
-} from '../lib/schemas.ts';
-import { validateCorpus, type Corpus } from '../lib/validate.ts';
-import {
-  alternativeExplanations,
-  claims,
-  edges,
-  flagshipCase,
-  nodes,
-  researchQuestions,
-  sources,
-  CASE_ID,
-} from '../content/__fixtures__/valid/minimal-case.ts';
+import { productionRegistry } from '../content/index.ts';
+import { loadCorpus } from '../lib/loadContent.ts';
+import { validateCorpus } from '../lib/validate.ts';
 
-let schemaFailures = 0;
+const loaded = loadCorpus(productionRegistry);
 
-function parseAll<T>(
-  label: string,
-  schema: { safeParse: (v: unknown) => { success: boolean; error?: { message: string } } },
-  entities: readonly T[],
-): void {
-  for (const entity of entities) {
-    const result = schema.safeParse(entity);
-    if (!result.success) {
-      schemaFailures += 1;
-      const id = (entity as { id?: string }).id ?? '(no id)';
-      console.error(`SCHEMA ${label} ${id}: ${result.error?.message ?? 'parse failed'}`);
-    }
+if (!loaded.ok) {
+  for (const failure of loaded.failures) {
+    const entity = failure.entityId === null ? '' : ` [${failure.entityId}]`;
+    console.error(`LOAD ${failure.moduleId}${entity}: ${failure.message}`);
   }
-}
-
-parseAll('Source', SourceSchema, sources);
-parseAll('Claim', ClaimSchema, claims);
-parseAll('ResearchQuestion', ResearchQuestionSchema, researchQuestions);
-parseAll('MechanismNode', MechanismNodeSchema, nodes);
-parseAll('MechanismEdge', MechanismEdgeSchema, edges);
-parseAll('AlternativeExplanation', AlternativeExplanationSchema, alternativeExplanations);
-parseAll('Case', CaseSchema, [flagshipCase]);
-
-if (schemaFailures > 0) {
-  console.error(`validate-content: ${schemaFailures} schema failure(s).`);
+  console.error(`validate-content: ${loaded.failures.length} loading failure(s).`);
   process.exit(1);
 }
 
-const corpus: Corpus = {
-  sources,
-  modules: [{
-    caseId: CASE_ID,
-    case: flagshipCase,
-    claims,
-    researchQuestions,
-    nodes,
-    edges,
-    alternativeExplanations,
-  }],
-};
+const validationFailures = validateCorpus(loaded.corpus);
 
-const failures = validateCorpus(corpus);
-
-if (failures.length > 0) {
-  for (const failure of failures) {
+if (validationFailures.length > 0) {
+  for (const failure of validationFailures) {
     console.error(`${failure.ruleId} ${failure.entityId}: ${failure.message}`);
   }
-  console.error(`validate-content: ${failures.length} validator failure(s).`);
+  console.error(`validate-content: ${validationFailures.length} validator failure(s).`);
   process.exit(1);
 }
 
-console.log(
-  `validate-content: OK — ${sources.length} sources, ${claims.length} claims, ` +
-  '1 case validated against V1-V20.',
-);
+const { corpus } = loaded;
+console.log('validate-content: OK — production corpus valid against schemas and V1-V20.');
+console.log(`  sources: ${corpus.sources.length}`);
+for (const module of corpus.modules) {
+  const c = module.case;
+  console.log(
+    `  case ${c.id} (${c.status}): ` +
+    `${module.researchQuestions.length} question(s), ` +
+    `${module.claims.length} claim(s), ` +
+    `${module.nodes.length} node(s), ` +
+    `${module.edges.length} edge(s), ` +
+    `${module.alternativeExplanations.length} alternative(s)`,
+  );
+}
