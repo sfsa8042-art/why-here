@@ -58,17 +58,21 @@ describe('production corpus', () => {
     expect(validateCorpus(result.corpus)).toEqual([]);
   });
 
-  it('contains the honest Netherlands preview: questions, no claims, no thesis', () => {
+  it('contains the honest Netherlands research case: earned statuses, no thesis, no causal claims', () => {
     const result = loadCorpus(productionRegistry);
     if (!result.ok) throw new Error('production corpus failed to load');
     const nl = result.corpus.modules.find(
       (m) => m.caseId === 'netherlands-semiconductor-equipment',
     );
     expect(nl).toBeDefined();
-    expect(nl?.case.status).toBe('preview');
+    expect(nl?.case.status).toBe('research');
     expect(nl?.researchQuestions.length).toBeGreaterThanOrEqual(1);
-    expect(nl?.claims).toEqual([]);
     expect(nl?.case).not.toHaveProperty('thesisClaimId');
+    expect(nl?.claims.length).toBe(10);
+    expect(nl?.claims.every(
+      (c) => c.claimType === 'factual' || c.claimType === 'interpretive',
+    )).toBe(true);
+    expect(nl?.claims.every((c) => c.epistemicStatus === 'well_supported')).toBe(true);
   });
 });
 
@@ -183,7 +187,7 @@ describe('validate-content command', () => {
       { cwd: projectRoot, encoding: 'utf8', timeout: 60_000 },
     );
     expect(run.status, run.stderr).toBe(0);
-    expect(run.stdout).toContain('netherlands-semiconductor-equipment (preview)');
+    expect(run.stdout).toContain('netherlands-semiconductor-equipment (research)');
     expect(run.stdout).not.toContain('fixture');
   });
 });

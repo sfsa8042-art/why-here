@@ -1,21 +1,21 @@
 /**
  * Netherlands × Semiconductor Equipment — case metadata.
  *
- * Registered as a PREVIEW case for now: it poses research questions and
- * asserts nothing. It becomes the flagship case only in Increment 4,
- * when claims are authored against real located sources; a thesis
- * cannot exist before the claim it must resolve to.
+ * Status `research`: verified claims carry the epistemic statuses they
+ * actually earn, but the case has no thesis and must not be presented
+ * as completed. Flagship conversion happens only when the full analysis
+ * earns an interpretive or causal thesis claim (Increment 4 and later).
  */
 
-import type { PreviewCase } from '../../../lib/schemas.ts';
+import type { ResearchCase } from '../../../lib/schemas.ts';
 
 export const CASE_ID = 'netherlands-semiconductor-equipment';
 
-export const netherlandsCase: PreviewCase = {
+export const netherlandsCase: ResearchCase = {
   id: CASE_ID,
   country: 'Netherlands',
   industry: 'Semiconductor Equipment',
-  status: 'preview',
+  status: 'research',
   researchQuestionIds: [
     'nl-q-why-netherlands',
     'nl-q-actor-roles',

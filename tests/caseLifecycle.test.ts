@@ -149,11 +149,14 @@ describe('lifecycle invariants', () => {
     expect(asResearch.map((f) => [f.ruleId, f.entityId])).toEqual([['V9', 'under-floored']]);
   });
 
-  it('the existing Netherlands preview remains valid before conversion (req 7)', () => {
+  it('the production Netherlands case loads and validates cleanly (req 7)', () => {
+    // Originally asserted the pre-conversion preview; since the Research
+    // Pack 1 conversion the production case is `research` — the corpus
+    // must still be fully valid.
     const result = loadCorpus(productionRegistry);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(validateCorpus(result.corpus)).toEqual([]);
-    expect(result.corpus.modules[0]?.case.status).toBe('preview');
+    expect(result.corpus.modules[0]?.case.status).toBe('research');
   });
 });
