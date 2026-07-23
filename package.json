@@ -8,7 +8,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "validate-content": "echo \"validate-content: not implemented until Increment 2\" && exit 0",
+    "validate-content": "node scripts/validate-content.ts",
     "prebuild": "npm run validate-content",
     "build": "next build"
   },
@@ -16,6 +16,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/node": "^26.1.1",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4"
   }

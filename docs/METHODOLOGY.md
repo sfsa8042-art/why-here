@@ -103,9 +103,12 @@ Context evidence situates a claim; it does not support it. No claim above
   non-`other` source.
 - **factual / well_supported** — one supporting citation from primary,
   academic or reputable press.
-- **interpretive / well_supported** — one supporting academic source, or an
-  independent pair of supporting expert sources (academic or reputable press
-  with named authors and an institution).
+- **interpretive / well_supported** — one supporting expert academic source,
+  or an independent pair of supporting expert sources. An *expert source* is
+  an `academic` source with identifiable authors or an identifiable issuing
+  institution, or a `reputable_press` source with at least one named author
+  and an identifiable institution. Anonymous or provenance-poor sources do
+  not qualify.
 - **causal / well_supported** — an independent supporting pair including at
   least one academic source, plus at least one valid limitation claim.
 - **counterfactual / well_supported** — a stated analytical method, a
