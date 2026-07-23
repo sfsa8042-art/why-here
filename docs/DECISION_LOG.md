@@ -57,6 +57,17 @@ matters resolves to sourced claims.
 **Preview cases assert nothing.** `PreviewCase` has no `thesisClaimId` field
 at all, and carries no claim above `insufficient`. A preview poses questions.
 
+**The case lifecycle has an honest middle state: `research`.** Two states
+were not enough: a case with verified claims carrying earned evidence
+statuses but no final thesis had no home — authoring supported claims as
+`insufficient` merely to satisfy preview honesty would misrepresent the
+evidence, and a flagship thesis cannot exist before the analysis that
+earns it. `ResearchCase` requires research questions, structurally rejects
+a thesis, carries claims at the statuses they actually earn, has no
+preview claim ceiling, and is explicitly research in progress: never
+presented as a completed case and never unlocking flagship-only features.
+Evidence floors are identical across all three statuses.
+
 **Timeline labels are generated, not authored.** The strict alternative was
 chosen over a semantic containment heuristic: generation removes the smuggling
 channel entirely rather than policing it imperfectly.

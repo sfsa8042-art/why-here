@@ -429,8 +429,30 @@ export const PreviewCaseSchema = z
   })
   .strict();
 
+/**
+ * Case-lifecycle amendment: the honest middle state. A research case
+ * holds verified claims AT THE EPISTEMIC STATUSES THEY ACTUALLY EARN
+ * (no preview status cap, no preview claim ceiling) but carries NO
+ * thesis — `thesisClaimId` is structurally absent and rejected by
+ * `.strict()`, exactly as on previews. It is research in progress, not
+ * a completed case: it must never be presented as finished and does
+ * not unlock flagship-only product features. Evidence floors are
+ * status-independent — moving a case between lifecycle states changes
+ * nothing about what any claim's status requires.
+ */
+export const ResearchCaseSchema = z
+  .object({
+    id: z.string().min(1),
+    country: z.string().min(1),
+    industry: z.string().min(1),
+    status: z.literal('research'),
+    researchQuestionIds: z.array(z.string().min(1)).min(1),
+  })
+  .strict();
+
 export const CaseSchema = z.discriminatedUnion('status', [
   FlagshipCaseSchema,
+  ResearchCaseSchema,
   PreviewCaseSchema,
 ]);
 
@@ -465,5 +487,6 @@ export type MechanismEdge = z.infer<typeof MechanismEdgeSchema>;
 export type AlternativeExplanation = z.infer<typeof AlternativeExplanationSchema>;
 
 export type FlagshipCase = z.infer<typeof FlagshipCaseSchema>;
+export type ResearchCase = z.infer<typeof ResearchCaseSchema>;
 export type PreviewCase = z.infer<typeof PreviewCaseSchema>;
 export type Case = z.infer<typeof CaseSchema>;

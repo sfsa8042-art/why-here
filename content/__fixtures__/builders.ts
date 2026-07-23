@@ -170,6 +170,17 @@ export function makeFlagshipCase(over: Partial<Case> & { id?: string } = {}): Ca
   } as Case;
 }
 
+export function makeResearchCase(over: Partial<Case> & { id?: string } = {}): Case {
+  return {
+    id: FIXTURE_CASE_ID,
+    country: 'Synthetic Country',
+    industry: 'Synthetic Industry',
+    status: 'research',
+    researchQuestionIds: ['builder-question'],
+    ...over,
+  } as Case;
+}
+
 /** Default sources: two mutually independent academics + one primary. */
 export function defaultSources(): Source[] {
   return [

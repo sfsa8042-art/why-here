@@ -756,8 +756,11 @@ export function validateCorpus(
         fail('V15', caseEntity.id,
           `thesisClaimId "${thesis.id}" is ${thesis.claimType}; a flagship thesis must be interpretive or causal`);
       }
-    } else {
-      /* V18 — preview honesty */
+    } else if (caseEntity.status === 'preview') {
+      /* V18 — preview honesty. Research cases are deliberately exempt:
+         they carry claims at the statuses the evidence actually earns,
+         with no preview ceiling and no thesis. Evidence floors (V9)
+         apply identically to every lifecycle status. */
       if (module.claims.length > previewCeiling) {
         fail('V18', caseEntity.id,
           `preview case carries ${module.claims.length} claims; ceiling is ${previewCeiling}`);

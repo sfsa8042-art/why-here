@@ -172,6 +172,10 @@ explanation of why the question matters resolves to sourced Claims.
 
 ## Case — discriminated union on `status`
 
+Lifecycle: `preview` (poses questions, asserts nothing) → `research`
+(verified claims at earned statuses, no thesis) → `flagship` (completed
+case with a thesis, suitable for the public flagship experience).
+
 **FlagshipCase** (`.strict()`)
 
 ```
@@ -185,6 +189,27 @@ researchQuestionIds  string[]
 
 `thesisClaimId` must resolve to an `interpretive` or `causal` Claim belonging
 to the same case.
+
+**ResearchCase** (`.strict()`)
+
+```
+id                   string
+country              string
+industry             string
+status               'research'
+researchQuestionIds  string[], min 1
+```
+
+The honest middle state of the case lifecycle
+(`preview → research → flagship`). A research case may contain sourced
+factual and interpretive claims **at the epistemic statuses they actually
+earn** — no preview status cap and no preview claim ceiling — but carries
+no thesis: `thesisClaimId` is structurally absent and rejected by
+`.strict()`. It may contain zero causal or counterfactual claims. It is
+research in progress: it must never be presented as a completed case and
+does not unlock flagship-only product features. Evidence floors are
+identical across all lifecycle statuses; converting a case between
+statuses never changes what any claim's status requires.
 
 **PreviewCase** (`.strict()`)
 

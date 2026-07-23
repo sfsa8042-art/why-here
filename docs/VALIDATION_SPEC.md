@@ -27,7 +27,8 @@ Enforced by `lib/schemas.ts` as specified in CONTENT_MODEL.md. Notably:
 - a citation may not derive from its own source; no duplicate entries in a
   citation's `derivedFromSourceIds`
 - node label length, terminal punctuation, relational-verb denylist
-- `PreviewCase` rejects `thesisClaimId` (`.strict()`)
+- `PreviewCase` and `ResearchCase` reject `thesisClaimId` (`.strict()`);
+  both require at least one research question
 
 ## Validator rules
 
@@ -113,7 +114,11 @@ resolves to an `interpretive` or `causal` claim in the same case.
 claim, both resolving and in-case.
 
 **V18 — Preview honesty.** A `preview` case carries no claim above
-`insufficient`, and no more than the configured claim ceiling.
+`insufficient`, and no more than the configured claim ceiling. `research`
+and `flagship` cases are exempt from both: a research case carries claims
+at the statuses they actually earn, with no ceiling and no thesis.
+Evidence floors (V9) apply identically to every lifecycle status —
+converting a case between statuses never changes a claim's requirements.
 
 **V19 — Research question integrity.** `rationaleClaimIds` resolve and do not
 cross case boundaries.
@@ -231,6 +236,12 @@ The build exits non-zero if any occurs.
 **Case union**
 - flagship requires thesis; preview rejects thesis; preview with zero
   questions rejected; valid preview accepted
+- research case rejects thesis; research with zero questions rejected
+- research case carries well_supported factual and interpretive claims
+  without a thesis; may contain zero causal claims; exempt from the
+  preview ceiling; cross-case references still rejected
+- an under-evidenced claim fails V9 identically under research and
+  flagship status (floors are lifecycle-independent)
 
 **Research questions**
 - a question with no `rationaleClaimIds` parses and validates cleanly
