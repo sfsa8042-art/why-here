@@ -23,6 +23,9 @@ Enforced by `lib/schemas.ts` as specified in CONTENT_MODEL.md. Notably:
 - `fromNodeId !== toNodeId`
 - source has at least one retrievable identifier; no provenance
   self-reference; no duplicate `derivedFromSourceIds`
+- source carries mandatory `temporalRelation` and `subjectRelationship`
+- a citation may not derive from its own source; no duplicate entries in a
+  citation's `derivedFromSourceIds`
 - node label length, terminal punctuation, relational-verb denylist
 - `PreviewCase` rejects `thesisClaimId` (`.strict()`)
 
@@ -45,9 +48,21 @@ module's `caseId`.
 **V5 — Locator precision.** Any citation of a `long_form` source carries a
 non-placeholder locator.
 
-**V6 — Provenance graph.** Directed edges from each Source to its
-`originalSourceId` and each `derivedFromSourceIds` member. Must resolve, must
-contain no direct or transitive cycles, no self-references, no duplicates.
+**V6 — Provenance graphs (two scopes).**
+
+*Source-level.* Directed edges from each Source to its `originalSourceId`
+and each `derivedFromSourceIds` member describe the source AS A WHOLE.
+References must resolve; no self-reference; no duplicates; the global
+source-level graph must be acyclic.
+
+*Citation-level.* A Citation's `derivedFromSourceIds` describes ONE
+evidence passage used for one Claim. References must resolve; a citation
+cannot derive from its own source; no duplicates; cycles are rejected only
+inside that Claim's EFFECTIVE provenance graph (source-level edges plus
+that claim's own citation edges). Opposite derivations recorded on two
+separate claims are two different passages, not a cycle: Claim A recording
+X ← Y while Claim B records Y ← X is valid. Citation-level edges are never
+merged into the global source-level graph.
 
 **V7 — Duplicate sources.** No two Sources with differing `id` share a
 normalized DOI, ISBN, archive reference or canonical URL
@@ -58,6 +73,13 @@ A is reachable from B or B from A in the transitive closure of the provenance
 graph; they share a common ancestor in that graph; or they share an
 `institution` and have a non-empty intersection of `authors`. Otherwise
 independent. Conservative by construction.
+
+**Claim-scoped augmentation.** When independence is evaluated FOR A CLAIM,
+the provenance closure is augmented with the citation-level
+`derivedFromSourceIds` edges of that claim's citations. Two citations never
+count as independent for a claim when one passage explicitly derives from
+the other source; the same pair may remain independent on another claim
+whose citations carry no such derivation.
 
 **V9 — Status floors.** Each claim must meet the evidence floor for its type
 and status, as specified in METHODOLOGY.md. Applied to `supports` citations
@@ -167,9 +189,17 @@ The build exits non-zero if any occurs.
 
 **Provenance**
 27. An unresolved `originalSourceId` or `derivedFromSourceIds` member
-28. A direct or transitive provenance cycle
+28. A direct or transitive cycle in the global SOURCE-LEVEL provenance
+    graph, or in one claim's effective provenance graph (source-level
+    edges plus that claim's citation-level edges)
 29. Two sources with differing `id` share a normalized DOI, ISBN, archive
     reference or canonical URL
+29a. An unresolved citation-level `derivedFromSourceIds` member
+29b. A citation deriving from its own source, or duplicating an entry in
+     its `derivedFromSourceIds`
+29c. A claim whose status requires an independent source combination in
+     which the only candidate pairs are joined by citation-level
+     derivation on that claim
 
 **Limitations**
 30. A limitation claim fails any integrity rule (missing, cross-case,
@@ -237,6 +267,20 @@ The build exits non-zero if any occurs.
 - transitive dependence: A → B → C proves A and C dependent
 - shared institution plus overlapping authors proves dependence
 - distinct institutions and authors prove independence
+
+**Source provenance dimensions**
+- a contemporaneous subject-authored documentary source parses and can
+  establish a factual claim
+- a retrospective subject-authored institutional history parses and can
+  carry factual/well_supported, but never earns `established` alone
+- an academic source globally independent but citation-level derived from
+  another source is dependent for that claim
+- the same pair remains potentially independent on a claim with no derived
+  provenance
+- unresolved citation-level provenance is rejected
+- a citation-level cycle INSIDE one claim is rejected
+- opposite citation-level derivations on two separate claims are accepted
+- a global source-level provenance cycle is rejected
 
 **Bounded selection**
 - k = 1 singleton returns the lexicographically first satisfying source

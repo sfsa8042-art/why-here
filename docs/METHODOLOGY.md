@@ -76,12 +76,27 @@ claims always display a speculative marker.
 
 ## Evidence rules
 
-### Source types
+### Source classification — three dimensions
 
-`primary` · `academic` · `reputable_press` · `other`
+One enum cannot carry what kind of publication a source is, when it stands
+relative to the events, and who wrote it. These are separate, mandatory
+dimensions:
 
-Source type constrains but does not equal epistemic status. The two axes are
-kept separate deliberately; conflating them is a common error.
+- **Source type** — `documentary` · `academic` · `institutional_history` ·
+  `reputable_press` · `reference` · `other`. `documentary` replaces the
+  former `primary`: being a document does not imply being contemporaneous.
+  An official company history is `institutional_history`, not documentary
+  evidence.
+- **Temporal relation** — `contemporaneous` · `retrospective`: whether the
+  source stands inside the events it documents or looks back at them.
+- **Subject relationship** — `subject_authored` · `independent` · `mixed`:
+  whether the source was authored by the institution being studied.
+  Subject-authored is provenance information, **not** a verdict of
+  unreliability; the evidence floors apply the appropriate ceiling instead
+  of discarding such sources.
+
+Source classification constrains but does not equal epistemic status. The
+axes are kept separate deliberately; conflating them is a common error.
 
 ### Citations locate evidence
 
@@ -98,11 +113,15 @@ Context evidence situates a claim; it does not support it. No claim above
 
 ### Status floors by claim type
 
-- **factual / established** — one primary supporting source, or two mutually
-  independent supporting sources from academic/reputable press; at least one
-  non-`other` source.
-- **factual / well_supported** — one supporting citation from primary,
-  academic or reputable press.
+- **factual / established** — one supporting **contemporaneous documentary**
+  source, or two mutually independent supporting sources from
+  documentary/academic/reputable press. A retrospective institutional
+  history alone never satisfies the direct documentary route, even when
+  published by the institution involved: subject authorship is tolerated
+  there, retrospection is not.
+- **factual / well_supported** — one supporting citation from a documentary,
+  academic, reputable-press or institutional-history source. (`reference`
+  and `other` sources support nothing above `insufficient`.)
 - **interpretive / well_supported** — one supporting expert academic source,
   or an independent pair of supporting expert sources. An *expert source* is
   an `academic` source with identifiable authors or an identifiable issuing
@@ -132,6 +151,19 @@ dependence.
 **It cannot detect two academic sources silently resting on the same unnamed
 origin.** It is a dependence *detector*, not an independence *proof*. The
 Method page must state this plainly rather than implying verification.
+
+**Dependence can vary by citation.** A publication may rely on another
+source for one passage while using independent evidence elsewhere. A
+Citation may therefore carry its own `derivedFromSourceIds`: for any claim
+citing that passage, the two sources are treated as dependent, while the
+same pair may remain independent on a claim whose citations carry no such
+derivation. Citation-level provenance must resolve and may not be
+self-referential; cycles are rejected only within a single claim's
+effective provenance graph. Two publications may legitimately rely on one
+another in different passages addressing different claims — opposite
+derivations on two separate claims are not contradictory and are not
+rejected. Only the source-level graph (the source as a whole) must be
+globally acyclic.
 
 ## Limits of the methodology
 

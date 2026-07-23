@@ -92,6 +92,24 @@ claims.
 AI. The claim/citation corpus leaves a clean seam for later retrieval-grounded
 use.
 
+**Source provenance is three-dimensional; dependence can be
+citation-scoped.** One `sourceType` enum could not distinguish
+contemporaneous documentary evidence from official retrospective
+institutional histories, nor subject-authored from independent sources.
+Source classification is now type × temporal relation × subject
+relationship, all mandatory. Citations may carry passage-level
+`derivedFromSourceIds`, which count against independence only for the
+claim carrying that citation, without contaminating other claims. Cycle
+scope follows the same distinction: the global source-level graph must be
+acyclic, while citation-level cycles are rejected only inside one claim's
+effective provenance graph — opposite derivations on two separate claims
+are two different passages, not a contradiction. (An earlier draft
+rejected cycles over one combined global graph; that was over-broad and
+was corrected on review.) The factual `established` direct route requires
+contemporaneous documentary evidence — a retrospective institutional
+history never satisfies it alone. Subject-authored is provenance
+information, not a synonym for unreliable.
+
 ## Rejected
 
 **Startup positioning for the atlas.** No moat, no willingness to pay,

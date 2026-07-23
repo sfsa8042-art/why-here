@@ -164,12 +164,15 @@ export function provenanceParents(source: Source): string[] {
 }
 
 /**
- * Transitive closure of the provenance graph: source id → set of every
- * ancestor id (including ids that resolve to no Source; V6 reports
- * those separately). Guarded against cycles, which V6 also rejects.
+ * Transitive ancestor closure over an arbitrary parent relation:
+ * id → set of every ancestor id (including ids that resolve to no
+ * Source; V6 reports those separately). Guarded against cycles, which
+ * V6 also rejects.
  */
-export function buildAncestorMap(sources: Source[]): Map<string, Set<string>> {
-  const byId = new Map(sources.map((s) => [s.id, s]));
+export function computeAncestors(
+  ids: Iterable<string>,
+  parentsOf: (id: string) => string[],
+): Map<string, Set<string>> {
   const memo = new Map<string, Set<string>>();
   const inProgress = new Set<string>();
 
@@ -179,8 +182,7 @@ export function buildAncestorMap(sources: Source[]): Map<string, Set<string>> {
     if (inProgress.has(id)) return new Set(); // cycle guard; V6 reports it
     inProgress.add(id);
     const ancestors = new Set<string>();
-    const source = byId.get(id);
-    for (const parent of source ? provenanceParents(source) : []) {
+    for (const parent of parentsOf(id)) {
       ancestors.add(parent);
       for (const a of visit(parent)) ancestors.add(a);
     }
@@ -189,8 +191,62 @@ export function buildAncestorMap(sources: Source[]): Map<string, Set<string>> {
     return ancestors;
   };
 
-  for (const s of sources) visit(s.id);
+  for (const id of ids) visit(id);
   return memo;
+}
+
+/** Source-level (global) provenance closure. */
+export function buildAncestorMap(sources: Source[]): Map<string, Set<string>> {
+  const byId = new Map(sources.map((s) => [s.id, s]));
+  return computeAncestors(byId.keys(), (id) => {
+    const source = byId.get(id);
+    return source ? provenanceParents(source) : [];
+  });
+}
+
+/**
+ * The citation-level derivation edges of ONE claim: source id → the
+ * source ids its passages explicitly derive from. Passage-specific by
+ * design — these edges never leave the claim that carries them.
+ */
+export function citationDerivationEdges(claim: Claim): Map<string, Set<string>> {
+  const edges = new Map<string, Set<string>>();
+  for (const citation of claim.citations) {
+    for (const derivedId of citation.derivedFromSourceIds ?? []) {
+      let set = edges.get(citation.sourceId);
+      if (set === undefined) {
+        set = new Set();
+        edges.set(citation.sourceId, set);
+      }
+      set.add(derivedId);
+    }
+  }
+  return edges;
+}
+
+/**
+ * Citation-level provenance scopes dependence to ONE claim: a passage
+ * in source A relying on source B makes A and B dependent for every
+ * claim carrying that citation, while the same pair may remain
+ * independent on a claim whose citations carry no such derivation.
+ * Global source-level provenance is always included.
+ */
+export function claimScopedDependence(
+  claim: Claim,
+  sourceById: Map<string, Source>,
+  globalAncestors: Map<string, Set<string>>,
+): (a: Source, b: Source) => boolean {
+  const citationEdges = citationDerivationEdges(claim);
+  if (citationEdges.size === 0) {
+    return (a, b) => areSourcesDependent(a, b, globalAncestors);
+  }
+  const augmented = computeAncestors(sourceById.keys(), (id) => {
+    const source = sourceById.get(id);
+    const base = source ? provenanceParents(source) : [];
+    const extra = citationEdges.get(id);
+    return extra ? [...base, ...extra] : base;
+  });
+  return (a, b) => areSourcesDependent(a, b, augmented);
 }
 
 /**
@@ -327,8 +383,14 @@ const RELATIONAL_CLAIM_TYPES: ReadonlySet<ClaimType> = new Set(['causal', 'inter
 const LIMITATION_CLAIM_TYPES: ReadonlySet<ClaimType> = new Set([
   'factual', 'interpretive', 'causal',
 ]);
-const EXPERT_SOURCE_TYPES: ReadonlySet<Source['sourceType']> = new Set([
-  'primary', 'academic', 'reputable_press',
+/** Types that can carry factual/well_supported on a single citation. */
+const WELL_SUPPORTED_FACTUAL_TYPES: ReadonlySet<Source['sourceType']> = new Set([
+  'documentary', 'academic', 'reputable_press', 'institutional_history',
+]);
+
+/** Types admitted to the factual/established independent-pair route. */
+const ESTABLISHED_PAIR_TYPES: ReadonlySet<Source['sourceType']> = new Set([
+  'documentary', 'academic', 'reputable_press',
 ]);
 
 export function validateCorpus(
@@ -392,6 +454,12 @@ export function validateCorpus(
       }
     }
   }
+
+  /* source-level cycle check: the GLOBAL graph uses only Source fields.
+     Citation-level edges are passage-specific and never enter it — two
+     publications may legitimately rely on one another in different
+     passages addressing different claims. Citation-level resolution and
+     per-claim cycle checks happen in the claims loop below. */
   for (const cycle of findCycles(
     sourceById.keys(),
     (id) => {
@@ -400,12 +468,10 @@ export function validateCorpus(
     },
   )) {
     fail('V6', cycle[0] ?? '(unknown)',
-      `provenance cycle: ${[...cycle, cycle[0]].join(' -> ')}`);
+      `source-level provenance cycle: ${[...cycle, cycle[0]].join(' -> ')}`);
   }
 
   const ancestorMap = buildAncestorMap(corpus.sources);
-  const dependent = (a: Source, b: Source): boolean =>
-    areSourcesDependent(a, b, ancestorMap);
 
   /* ---------- V7 duplicate sources ---------- */
 
@@ -524,7 +590,50 @@ export function validateCorpus(
         }
       }
 
-      /* evidence rules */
+      /* citation-level provenance — scoped to THIS claim: references
+         must resolve, and the claim's EFFECTIVE provenance graph
+         (source-level edges + this claim's citation edges) must be
+         acyclic. Opposite derivations on two different claims are two
+         different passages and are NOT a cycle. */
+      const derivationEdges = citationDerivationEdges(claim);
+      for (const [fromId, targets] of derivationEdges) {
+        for (const derivedId of targets) {
+          if (!sourceById.has(derivedId)) {
+            fail('V6', claim.id,
+              `citation of "${fromId}" derives from "${derivedId}", which does not resolve to a Source`);
+          }
+        }
+      }
+      if (derivationEdges.size > 0) {
+        const sourceParents = (id: string): string[] => {
+          const s = sourceById.get(id);
+          return s ? provenanceParents(s) : [];
+        };
+        for (const cycle of findCycles(
+          sourceById.keys(),
+          (id) => {
+            const extra = derivationEdges.get(id);
+            return extra ? [...sourceParents(id), ...extra] : sourceParents(id);
+          },
+        )) {
+          // report only cycles that need a citation edge; pure
+          // source-level cycles are already rejected globally
+          const usesCitationEdge = cycle.some((id, i) => {
+            const next = cycle[(i + 1) % cycle.length]!;
+            return derivationEdges.get(id)?.has(next) === true
+              && !sourceParents(id).includes(next);
+          });
+          if (usesCitationEdge) {
+            fail('V6', claim.id,
+              `citation-level provenance cycle in this claim's effective provenance graph: ${[...cycle, cycle[0]].join(' -> ')}`);
+          }
+        }
+      }
+
+      /* evidence rules — dependence is claim-scoped: citation-level
+         provenance on THIS claim's citations counts against independence
+         here, without contaminating other claims (V8) */
+      const claimDependent = claimScopedDependence(claim, sourceById, ancestorMap);
       const supportSources = uniqueSources(
         claim.citations.filter((c) => c.evidenceRole === 'supports'),
         sourceById,
@@ -552,7 +661,7 @@ export function validateCorpus(
         if (supportSources.length === 0 || contradictSources.length === 0) {
           fail('V11', claim.id,
             'contested claim requires at least one supports and one contradicts citation');
-        } else if (!hasIndependentCrossPair(supportSources, contradictSources, dependent)) {
+        } else if (!hasIndependentCrossPair(supportSources, contradictSources, claimDependent)) {
           fail('V11', claim.id,
             'contested claim requires mutually independent supporting and contradicting sources');
         }
@@ -560,7 +669,7 @@ export function validateCorpus(
 
       /* V9 — status floors (supports citations only) */
       if (!contextOnlyReported) {
-        const floorFailure = checkStatusFloor(claim, supportSources, dependent);
+        const floorFailure = checkStatusFloor(claim, supportSources, claimDependent);
         if (floorFailure !== null) fail('V9', claim.id, floorFailure);
       }
     }
@@ -745,23 +854,28 @@ function checkStatusFloor(
   switch (claim.claimType) {
     case 'factual': {
       if (status === 'established') {
-        const primary = selectIndependentSources(
-          supportSources, 1, (s) => s.sourceType === 'primary');
+        // Direct documentary route: the evidence must be CONTEMPORANEOUS.
+        // A retrospective institutional history — even the subject's own —
+        // never satisfies this route alone; subject authorship is
+        // provenance information, but retrospection caps the direct route.
+        const contemporaneousDocumentary = selectIndependentSources(
+          supportSources, 1,
+          (s) => s.sourceType === 'documentary' && s.temporalRelation === 'contemporaneous');
         const pair = selectIndependentSources(
           supportSources, 2,
-          (s) => s.sourceType === 'academic' || s.sourceType === 'reputable_press',
+          (s) => ESTABLISHED_PAIR_TYPES.has(s.sourceType),
           isDependent);
-        if (primary === null && pair === null) {
-          return 'factual/established requires one primary supporting source or two mutually independent academic/reputable_press supporting sources';
+        if (contemporaneousDocumentary === null && pair === null) {
+          return 'factual/established requires contemporaneous documentary supporting evidence or two mutually independent documentary/academic/reputable_press supporting sources';
         }
         return null;
       }
       // well_supported
       const single = selectIndependentSources(
-        supportSources, 1, (s) => EXPERT_SOURCE_TYPES.has(s.sourceType));
+        supportSources, 1, (s) => WELL_SUPPORTED_FACTUAL_TYPES.has(s.sourceType));
       return single !== null
         ? null
-        : 'factual/well_supported requires one supporting citation from a primary, academic or reputable_press source';
+        : 'factual/well_supported requires one supporting citation from a documentary, academic, reputable_press or institutional_history source';
     }
     case 'interpretive': {
       const expertAcademic = selectIndependentSources(

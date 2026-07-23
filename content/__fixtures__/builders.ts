@@ -32,6 +32,8 @@ export function makeSource(over: Partial<Source> & { id: string }): Source {
   return {
     title: `Synthetic source ${over.id}`,
     sourceType: 'academic',
+    temporalRelation: 'retrospective',
+    subjectRelationship: 'independent',
     lengthClass: 'short_form',
     url: `https://example.org/${over.id}`,
     ...over,
@@ -185,7 +187,9 @@ export function defaultSources(): Source[] {
     }),
     makeSource({
       id: 'builder-primary',
-      sourceType: 'primary',
+      sourceType: 'documentary',
+      temporalRelation: 'contemporaneous',
+      subjectRelationship: 'subject_authored',
       institution: 'Synthetic Archive',
       url: 'https://example.org/builder-primary',
     }),

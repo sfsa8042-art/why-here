@@ -77,11 +77,37 @@ export const NonEstablishedStatusSchema = z.enum([
 
 export const EvidenceRoleSchema = z.enum(['supports', 'contradicts', 'context']);
 
+/**
+ * WHAT KIND of publication a source is. Provenance amendment: this enum
+ * no longer smuggles temporality or authorship — those are separate,
+ * mandatory dimensions below. 'documentary' replaces the former
+ * 'primary': being a document does not imply being contemporaneous;
+ * that is stated explicitly.
+ */
 export const SourceTypeSchema = z.enum([
-  'primary',
+  'documentary',
   'academic',
+  'institutional_history',
   'reputable_press',
+  'reference',
   'other',
+]);
+
+/** WHEN the source stands relative to the events it documents. */
+export const TemporalRelationSchema = z.enum([
+  'contemporaneous',
+  'retrospective',
+]);
+
+/**
+ * WHO authored the source relative to the subject under study.
+ * Subject-authored is provenance information, not a verdict of
+ * unreliability; the evidence floors apply the appropriate ceiling.
+ */
+export const SubjectRelationshipSchema = z.enum([
+  'subject_authored',
+  'independent',
+  'mixed',
 ]);
 
 export const LengthClassSchema = z.enum(['short_form', 'long_form']);
@@ -122,13 +148,42 @@ export const LocatorSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('url_fragment'), value: z.string().min(1) }),
 ]);
 
-export const CitationSchema = z.object({
-  sourceId: z.string().min(1),
-  locator: LocatorSchema,
-  evidenceRole: EvidenceRoleSchema,
-  note: z.string().min(1).optional(),
-  accessedAt: z.string().datetime().optional(),
-});
+/**
+ * Citation-level provenance: a specific PASSAGE may rely on another
+ * source even when the whole publication is not globally derived from
+ * it. `derivedFromSourceIds` here is passage-specific: the validator
+ * folds these edges into independence checks ONLY for the claim
+ * carrying this citation, and rejects unresolved references and cycles
+ * within that claim's effective provenance graph. It never merges the
+ * edges into the global source-level graph.
+ */
+export const CitationSchema = z
+  .object({
+    sourceId: z.string().min(1),
+    locator: LocatorSchema,
+    evidenceRole: EvidenceRoleSchema,
+    note: z.string().min(1).optional(),
+    accessedAt: z.string().datetime().optional(),
+    derivedFromSourceIds: z.array(z.string().min(1)).min(1).optional(),
+    provenanceNote: z.string().min(1).optional(),
+  })
+  .refine(
+    (c) => !(c.derivedFromSourceIds ?? []).includes(c.sourceId),
+    {
+      message: 'Citation must not derive from its own source',
+      path: ['derivedFromSourceIds'],
+    },
+  )
+  .refine(
+    (c) => {
+      const ids = c.derivedFromSourceIds ?? [];
+      return new Set(ids).size === ids.length;
+    },
+    {
+      message: 'Citation derivedFromSourceIds must not contain duplicates',
+      path: ['derivedFromSourceIds'],
+    },
+  );
 
 /* ------------------------------------------------------------------ *
  * Source
@@ -149,6 +204,8 @@ export const SourceSchema = z
     id: z.string().min(1),
     title: z.string().min(1),
     sourceType: SourceTypeSchema,
+    temporalRelation: TemporalRelationSchema,
+    subjectRelationship: SubjectRelationshipSchema,
     lengthClass: LengthClassSchema,
     authors: z.array(z.string().min(1)).optional(),
     institution: z.string().min(1).optional(),
@@ -384,6 +441,8 @@ export const CaseSchema = z.discriminatedUnion('status', [
 export type EpistemicStatus = z.infer<typeof EpistemicStatusSchema>;
 export type EvidenceRole = z.infer<typeof EvidenceRoleSchema>;
 export type SourceType = z.infer<typeof SourceTypeSchema>;
+export type TemporalRelation = z.infer<typeof TemporalRelationSchema>;
+export type SubjectRelationship = z.infer<typeof SubjectRelationshipSchema>;
 export type LengthClass = z.infer<typeof LengthClassSchema>;
 export type LensFacet = z.infer<typeof LensFacetSchema>;
 export type NodeType = z.infer<typeof NodeTypeSchema>;

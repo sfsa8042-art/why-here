@@ -32,7 +32,10 @@ requires reconstructing earlier versions.
 EpistemicStatus       established | well_supported | contested | insufficient
 NonEstablishedStatus  well_supported | contested | insufficient
 EvidenceRole          supports | contradicts | context
-SourceType            primary | academic | reputable_press | other
+SourceType            documentary | academic | institutional_history |
+                      reputable_press | reference | other
+TemporalRelation      contemporaneous | retrospective
+SubjectRelationship   subject_authored | independent | mixed
 LengthClass           short_form | long_form
 LensFacet             factor_conditions | demand_conditions | related_supporting |
                       firm_strategy_rivalry | government | chance
@@ -51,12 +54,26 @@ A locator resolves to a place inside a source, never to a document.
 ## Citation
 
 ```
-sourceId      string, required
-locator       Locator, required
-evidenceRole  EvidenceRole, required
-note          string, optional
-accessedAt    ISO 8601 datetime, optional
+sourceId              string, required
+locator               Locator, required
+evidenceRole          EvidenceRole, required
+note                  string, optional
+accessedAt            ISO 8601 datetime, optional
+derivedFromSourceIds  string[], optional, min 1 when present
+provenanceNote        string, optional
 ```
+
+**Citation-level provenance.** `derivedFromSourceIds` records that this
+specific passage relies on another source even when the whole publication
+is not globally derived from it. Schema refinements: a citation may not
+derive from its own source, and the list may not contain duplicates.
+Validator rules: every reference must resolve; the edges participate in
+independence checks ONLY for the claim carrying the citation; and cycles
+are rejected only inside that claim's effective provenance graph
+(source-level edges plus that claim's citation edges). Citation-level
+edges are never merged into the global source-level graph, so opposite
+derivations recorded on two separate claims — two different passages —
+are not a cycle.
 
 ## Source
 
@@ -64,6 +81,8 @@ accessedAt    ISO 8601 datetime, optional
 id                    string, required
 title                 string, required
 sourceType            SourceType, required
+temporalRelation      TemporalRelation, required
+subjectRelationship   SubjectRelationship, required
 lengthClass           LengthClass, required
 authors               string[], optional
 institution           string, optional
