@@ -33,6 +33,7 @@ import { CASE_ID } from './case.ts';
 const VANDUIJN = 'nl-src-vanduijn-2019';
 const ASML_2024 = 'nl-src-asml-founding-2024';
 const ASM_STORY = 'nl-src-asm-our-story';
+const ASML_IR_2017 = 'nl-src-asml-integrated-report-2017';
 
 const NOT_INSPECTED =
   'The original archival document was not directly inspected by this ' +
@@ -448,6 +449,101 @@ export const claims: Claim[] = [
           'the Objective section. These are the project’s own reported ' +
           'outcomes as compiled by CORDIS, not independently replicated ' +
           'technical measurements.',
+      },
+    ],
+    lensFacets: [],
+  },
+
+  /* ---------------- Retrieval Pack 4B — ASML Integrated Report 2017 ---
+   * Source directly inspected via the SEC-hosted exhibit (S14). Claims
+   * 15-17 are atomic factual statements from the "A short company
+   * history" section (report page 8), each cited to that named section.
+   * The source is ASML's own retrospective account and forms ONE
+   * subject-authored line with ASML's 2013 20-F, 2018 report, 2022
+   * annual report and history page — repetition across those is not
+   * independent corroboration, so all three claims are capped at
+   * well_supported. Attribution ("ASML states that") in claims 15 and
+   * 17 is load-bearing and preserved verbatim. No PAS 5500
+   * specifications, customers, financial performance, Philips
+   * financing/ownership, IPO terms, or DEEP-UV/ESPRIT link is asserted. */
+
+  /* 15 — PAS 5500 launch (attributed) */
+  {
+    id: 'nl-f-pas5500-launched-1991',
+    caseId: CASE_ID,
+    claimType: 'factual',
+    statement: 'ASML states that it launched the PAS 5500 in 1991.',
+    epistemicStatus: 'well_supported',
+    citations: [
+      {
+        sourceId: ASML_IR_2017,
+        locator: { kind: 'section', value: '"A short company history", report page 8' },
+        evidenceRole: 'supports',
+        note:
+          'ASML Integrated Report 2017, Exhibit 99.1 to Form 6-K (accession ' +
+          '0000937966-18-000008, filed 7 February 2018, SEC file no. ' +
+          '001-33463). The source additionally characterises the PAS 5500 as ' +
+          '"a major success"; that evaluative characterisation is EXCLUDED ' +
+          'from this claim, which carries only the stated launch year. This ' +
+          'is ASML’s own retrospective account, not independent corroboration.',
+      },
+    ],
+    lensFacets: [],
+  },
+
+  /* 16 — holding-company incorporation */
+  {
+    id: 'nl-f-holding-company-incorporated-1994',
+    caseId: CASE_ID,
+    claimType: 'factual',
+    statement:
+      'ASM Lithography Holding N.V. was incorporated in the Netherlands on ' +
+      '3 October 1994 to serve as the holding company for ASML’s worldwide ' +
+      'operations.',
+    epistemicStatus: 'well_supported',
+    citations: [
+      {
+        sourceId: ASML_IR_2017,
+        locator: { kind: 'section', value: '"A short company history", report page 8' },
+        evidenceRole: 'supports',
+        note:
+          'ASML Integrated Report 2017, Exhibit 99.1 to Form 6-K (accession ' +
+          '0000937966-18-000008, filed 7 February 2018). Recorded as ASML ' +
+          'states it: no inference is drawn that the incorporation was ' +
+          'undertaken to prepare for the IPO, and no Philips role is ' +
+          'inferred. An identical statement appears in ASML’s FY2013 Form ' +
+          '20-F (accession 0001193125-14-046822, Item 4.A); per the ' +
+          'dependence ruling that filing is a corroborating locator within ' +
+          'the same subject-authored line, not an independent source, and no ' +
+          'duplicate claim is created.',
+      },
+    ],
+    lensFacets: [],
+  },
+
+  /* 17 — public-company transition (attributed) */
+  {
+    id: 'nl-f-public-company-listings-1995',
+    caseId: CASE_ID,
+    claimType: 'factual',
+    statement:
+      'ASML states that it became a public company in 1995, with listings on ' +
+      'Nasdaq and the Amsterdam stock exchange.',
+    epistemicStatus: 'well_supported',
+    citations: [
+      {
+        sourceId: ASML_IR_2017,
+        locator: { kind: 'section', value: '"A short company history", report page 8' },
+        evidenceRole: 'supports',
+        note:
+          'ASML Integrated Report 2017, Exhibit 99.1 to Form 6-K (accession ' +
+          '0000937966-18-000008, filed 7 February 2018). The 2017 report ' +
+          'retrospectively uses the label "Euronext Amsterdam"; because ' +
+          'Euronext was formed later, the production statement records the ' +
+          'historically neutral "the Amsterdam stock exchange". No inference ' +
+          'is drawn as to the exact IPO date, whether the two listings began ' +
+          'on the same day, offering terms, proceeds, valuation, Philips ' +
+          'ownership, or legal independence from Philips.',
       },
     ],
     lensFacets: [],

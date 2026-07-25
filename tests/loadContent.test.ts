@@ -68,14 +68,19 @@ describe('production corpus', () => {
     expect(nl?.case.status).toBe('research');
     expect(nl?.researchQuestions.length).toBeGreaterThanOrEqual(1);
     expect(nl?.case).not.toHaveProperty('thesisClaimId');
-    expect(nl?.claims.length).toBe(14);
+    expect(nl?.claims.length).toBe(17);
     // Pack 3: the directly inspected CORDIS record and its four claims
     expect(result.corpus.sources.some((s) => s.id === 'nl-src-cordis-deepuv-2048')).toBe(true);
+    // Pack 4B: the ASML Integrated Report 2017 and its three claims
+    expect(result.corpus.sources.some((s) => s.id === 'nl-src-asml-integrated-report-2017')).toBe(true);
     for (const id of [
       'nl-f-deepuv-coordination',
       'nl-f-deepuv-participants',
       'nl-f-deepuv-objective',
       'nl-f-deepuv-reported-results',
+      'nl-f-pas5500-launched-1991',
+      'nl-f-holding-company-incorporated-1994',
+      'nl-f-public-company-listings-1995',
     ]) {
       expect(nl?.claims.some((c) => c.id === id), id).toBe(true);
     }
