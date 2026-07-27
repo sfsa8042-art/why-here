@@ -71,6 +71,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'established',
     citations: [
       {
+        id: 'fixture-cit-factual-primary',
         sourceId: 'fixture-primary-doc',
         locator: { kind: 'page', value: '12' },
         evidenceRole: 'supports',
@@ -90,6 +91,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'fixture-cit-thesis-a',
         sourceId: 'fixture-academic-a',
         locator: { kind: 'section', value: '3.2' },
         evidenceRole: 'supports',
@@ -108,6 +110,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'fixture-cit-limitation-b',
         sourceId: 'fixture-academic-b',
         locator: { kind: 'section', value: '5.1' },
         evidenceRole: 'supports',
@@ -126,11 +129,13 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'fixture-cit-causal-a',
         sourceId: 'fixture-academic-a',
         locator: { kind: 'section', value: '4.1' },
         evidenceRole: 'supports',
       },
       {
+        id: 'fixture-cit-causal-b',
         sourceId: 'fixture-academic-b',
         locator: { kind: 'section', value: '2.4' },
         evidenceRole: 'supports',
@@ -150,11 +155,13 @@ export const claims: Claim[] = [
     epistemicStatus: 'contested',
     citations: [
       {
+        id: 'fixture-cit-contested-support',
         sourceId: 'fixture-academic-a',
         locator: { kind: 'section', value: '6.0' },
         evidenceRole: 'supports',
       },
       {
+        id: 'fixture-cit-contested-contra',
         sourceId: 'fixture-academic-b',
         locator: { kind: 'section', value: '6.0' },
         evidenceRole: 'contradicts',

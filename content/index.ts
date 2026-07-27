@@ -21,6 +21,8 @@ import { claims as netherlandsClaims } from './cases/netherlands-semiconductor-e
 import { nodes as netherlandsNodes } from './cases/netherlands-semiconductor-equipment/nodes.ts';
 import { edges as netherlandsEdges } from './cases/netherlands-semiconductor-equipment/edges.ts';
 import { alternativeExplanations as netherlandsAlternatives } from './cases/netherlands-semiconductor-equipment/alternatives.ts';
+import { places as netherlandsPlaces } from './cases/netherlands-semiconductor-equipment/places.ts';
+import { claimPlaceLinks as netherlandsClaimPlaceLinks } from './cases/netherlands-semiconductor-equipment/claimPlaceLinks.ts';
 
 export const productionRegistry: ContentRegistry = {
   sourceModules: [
@@ -39,6 +41,8 @@ export const productionRegistry: ContentRegistry = {
       nodes: netherlandsNodes,
       edges: netherlandsEdges,
       alternativeExplanations: netherlandsAlternatives,
+      places: netherlandsPlaces,
+      claimPlaceLinks: netherlandsClaimPlaceLinks,
     },
   ],
 };

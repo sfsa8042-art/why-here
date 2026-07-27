@@ -15,12 +15,14 @@ import type {
   Case,
   Citation,
   Claim,
+  ClaimPlaceLink,
   FactualClaim,
   InterpretiveClaim,
   CausalClaim,
   CounterfactualClaim,
   MechanismEdge,
   MechanismNode,
+  Place,
   ResearchQuestion,
   Source,
 } from '../../lib/schemas.ts';
@@ -40,8 +42,23 @@ export function makeSource(over: Partial<Source> & { id: string }): Source {
   };
 }
 
+/**
+ * Fixture citation ids.
+ *
+ * Any fixture citation that is REFERENCED by another entity (a
+ * ClaimPlaceLink, or a cross-entity reference test) MUST pass an explicit
+ * semantic `id`. When none is given, a clearly TEST-ONLY placeholder is
+ * generated. This placeholder is NOT stable — it is an order-dependent
+ * counter — so no test may ever assert on its value; it exists only to
+ * satisfy the required Citation.id schema for citations nothing points at.
+ * (A fixture built once and reused keeps the same generated ids, which is
+ * all the loader-determinism test needs — it never inspects the values.)
+ */
+let _testOnlyCitationSeq = 0;
+
 export function makeCitation(over: Partial<Citation> & { sourceId: string }): Citation {
   return {
+    id: `cit-testonly-${(_testOnlyCitationSeq += 1)}`,
     locator: { kind: 'section', value: '1.1' },
     evidenceRole: 'supports',
     ...over,
@@ -226,6 +243,8 @@ export interface CorpusOver {
   nodes?: MechanismNode[];
   edges?: MechanismEdge[];
   alternativeExplanations?: AlternativeExplanation[];
+  places?: Place[];
+  claimPlaceLinks?: ClaimPlaceLink[];
   case?: Case;
   caseId?: string;
   extraModules?: CaseContentModule[];
@@ -242,9 +261,77 @@ export function makeCorpus(over: CorpusOver = {}): Corpus {
     edges: over.edges ?? [makeEdge({ id: 'builder-edge' })],
     alternativeExplanations:
       over.alternativeExplanations ?? [makeAlternative({ id: 'builder-alt' })],
+    places: over.places ?? [],
+    claimPlaceLinks: over.claimPlaceLinks ?? [],
   };
   return {
     sources: over.sources ?? defaultSources(),
     modules: [module, ...(over.extraModules ?? [])],
   };
+}
+
+/* ------------------------------------------------------------------ *
+ * Geographic builders (Increment M0)
+ * ------------------------------------------------------------------ */
+
+export function makePlace(over: Partial<Place> & { id: string }): Place {
+  return {
+    caseId: FIXTURE_CASE_ID,
+    name: 'Synthetic City',
+    countryCode: 'NL',
+    kind: 'city',
+    geometry: {
+      type: 'point',
+      longitude: 5.0,
+      latitude: 52.0,
+      precision: 'city',
+      coordinateSource: 'Synthetic gazetteer',
+      attributionText: 'Synthetic attribution',
+    },
+    ...over,
+  };
+}
+
+export function makeClaimPlaceLink(
+  over: Partial<ClaimPlaceLink> & { id: string },
+): ClaimPlaceLink {
+  return {
+    caseId: FIXTURE_CASE_ID,
+    claimId: 'builder-factual',
+    placeId: 'builder-place',
+    relationship: 'organization_registered_address',
+    temporalScope: { year: 1988, endYear: 1991 },
+    citationIds: ['builder-geo-cit'],
+    evidencePrecision: 'city',
+    locatorNote: 'Synthetic address record.',
+    epistemicStatus: 'well_supported',
+    ...over,
+  };
+}
+
+/**
+ * A corpus with one factual claim carrying a KNOWN-id citation, one city
+ * Place, and one link between them — valid unless overridden. Uses a
+ * research case (no thesis required) to keep the geographic fixtures small.
+ */
+export function makeGeoCorpus(over: CorpusOver = {}): Corpus {
+  const geoClaim = makeFactual({
+    id: 'builder-geo-claim',
+    citations: [makeCitation({ id: 'builder-geo-cit', sourceId: 'builder-academic-a' })],
+  });
+  return makeCorpus({
+    case: makeResearchCase(),
+    claims: [geoClaim],
+    nodes: [],
+    edges: [],
+    alternativeExplanations: [],
+    places: [makePlace({ id: 'builder-place' })],
+    claimPlaceLinks: [makeClaimPlaceLink({
+      id: 'builder-link',
+      claimId: 'builder-geo-claim',
+      placeId: 'builder-place',
+      citationIds: ['builder-geo-cit'],
+    })],
+    ...over,
+  });
 }

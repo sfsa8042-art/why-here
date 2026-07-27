@@ -20,9 +20,11 @@ import { z } from 'zod';
 import {
   AlternativeExplanationSchema,
   CaseSchema,
+  ClaimPlaceLinkSchema,
   ClaimSchema,
   MechanismEdgeSchema,
   MechanismNodeSchema,
+  PlaceSchema,
   ResearchQuestionSchema,
   SourceSchema,
 } from './schemas.ts';
@@ -48,6 +50,9 @@ export interface RegisteredCaseModule {
   nodes: readonly unknown[];
   edges: readonly unknown[];
   alternativeExplanations: readonly unknown[];
+  /* Geographic layer (Increment M0); optional for pre-geographic modules. */
+  places?: readonly unknown[];
+  claimPlaceLinks?: readonly unknown[];
 }
 
 export interface ContentRegistry {
@@ -213,6 +218,10 @@ export function loadCorpus(registry: ContentRegistry): LoadResult {
     const alternativeExplanations = parseAll(
       module.moduleId, 'AlternativeExplanation', AlternativeExplanationSchema,
       module.alternativeExplanations);
+    const places = parseAll(
+      module.moduleId, 'Place', PlaceSchema, module.places ?? []);
+    const claimPlaceLinks = parseAll(
+      module.moduleId, 'ClaimPlaceLink', ClaimPlaceLinkSchema, module.claimPlaceLinks ?? []);
 
     if (caseResult.success) {
       modules.push({
@@ -223,6 +232,8 @@ export function loadCorpus(registry: ContentRegistry): LoadResult {
         nodes,
         edges,
         alternativeExplanations,
+        places,
+        claimPlaceLinks,
       });
     }
   }

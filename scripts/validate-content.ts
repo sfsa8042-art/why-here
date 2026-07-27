@@ -49,6 +49,8 @@ for (const module of corpus.modules) {
     `${module.claims.length} claim(s), ` +
     `${module.nodes.length} node(s), ` +
     `${module.edges.length} edge(s), ` +
-    `${module.alternativeExplanations.length} alternative(s)`,
+    `${module.alternativeExplanations.length} alternative(s), ` +
+    `${(module.places ?? []).length} place(s), ` +
+    `${(module.claimPlaceLinks ?? []).length} place-link(s)`,
   );
 }

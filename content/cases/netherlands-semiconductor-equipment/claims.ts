@@ -24,6 +24,14 @@
  * one academic source (institutional histories are outside the
  * established pair route). Every factual claim below carries the
  * well_supported status it earns from the dissertation citation.
+ *
+ * Citation ids (Increment M0): every Citation carries a stable,
+ * human-readable, globally-unique id. Two geographic address citations
+ * were added on the DEEP-UV coordination/participants claims (marked
+ * "geographic evidence, M0"); they locate the CORDIS Coordinator and
+ * Participants ADDRESS blocks and are the cited evidence for the two
+ * ClaimPlaceLinks (see ./claimPlaceLinks.ts). They record an address, not
+ * an operating/research/production/event location.
  */
 
 import type { Claim } from '../../../lib/schemas.ts';
@@ -34,6 +42,7 @@ const VANDUIJN = 'nl-src-vanduijn-2019';
 const ASML_2024 = 'nl-src-asml-founding-2024';
 const ASM_STORY = 'nl-src-asm-our-story';
 const ASML_IR_2017 = 'nl-src-asml-integrated-report-2017';
+const CORDIS = 'nl-src-cordis-deepuv-2048';
 
 const NOT_INSPECTED =
   'The original archival document was not directly inspected by this ' +
@@ -53,6 +62,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-jv-established-vanduijn-p278',
         sourceId: VANDUIJN,
         locator: { kind: 'page', value: '278 (PDF 281)' },
         evidenceRole: 'supports',
@@ -65,6 +75,7 @@ export const claims: Claim[] = [
           'itself. ' + NOT_INSPECTED,
       },
       {
+        id: 'nl-cit-jv-established-asml2024',
         sourceId: ASML_2024,
         locator: {
           kind: 'paragraph',
@@ -89,6 +100,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-contribution-vanduijn-p278',
         sourceId: VANDUIJN,
         locator: { kind: 'page', value: '278 (PDF 281)' },
         evidenceRole: 'supports',
@@ -113,6 +125,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-employees-vanduijn-p278',
         sourceId: VANDUIJN,
         locator: { kind: 'page', value: '278 (PDF 281)' },
         evidenceRole: 'supports',
@@ -123,6 +136,7 @@ export const claims: Claim[] = [
           'the agreement itself could not be verified. ' + NOT_INSPECTED,
       },
       {
+        id: 'nl-cit-employees-asml2024',
         sourceId: ASML_2024,
         locator: {
           kind: 'paragraph',
@@ -145,6 +159,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-reluctance-vanduijn-p278',
         sourceId: VANDUIJN,
         locator: { kind: 'page', value: '278 (PDF 281)' },
         evidenceRole: 'supports',
@@ -158,6 +173,7 @@ export const claims: Claim[] = [
           NOT_INSPECTED,
       },
       {
+        id: 'nl-cit-reluctance-asml2024',
         sourceId: ASML_2024,
         locator: {
           kind: 'paragraph',
@@ -181,6 +197,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-mip-vanduijn-p278',
         sourceId: VANDUIJN,
         locator: { kind: 'page', value: '278 (PDF 281)' },
         evidenceRole: 'supports',
@@ -209,6 +226,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-hydraulic-vanduijn-p277',
         sourceId: VANDUIJN,
         locator: { kind: 'page', value: '277 (PDF 280)' },
         evidenceRole: 'supports',
@@ -235,6 +253,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-pas2000-problems-vanduijn-p278',
         sourceId: VANDUIJN,
         locator: { kind: 'page', value: '278 (PDF 281)' },
         evidenceRole: 'supports',
@@ -258,6 +277,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-advance-vanduijn-p404',
         sourceId: VANDUIJN,
         locator: { kind: 'page', value: '404 (PDF 406-407)' },
         evidenceRole: 'supports',
@@ -284,6 +304,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-withdrawal-vanduijn-p414',
         sourceId: VANDUIJN,
         locator: { kind: 'page', value: '414-415 (PDF 417-418)' },
         evidenceRole: 'supports',
@@ -295,6 +316,7 @@ export const claims: Claim[] = [
           'Blickman). ' + NOT_INSPECTED,
       },
       {
+        id: 'nl-cit-withdrawal-asmstory',
         sourceId: ASM_STORY,
         locator: {
           kind: 'section',
@@ -318,6 +340,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-stake-vanduijn-p414',
         sourceId: VANDUIJN,
         locator: { kind: 'page', value: '414-415 (PDF 417-418)' },
         evidenceRole: 'supports',
@@ -352,16 +375,29 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
-        sourceId: 'nl-src-cordis-deepuv-2048',
+        id: 'nl-cit-deepuv-coordination-projinfo-cordis',
+        sourceId: CORDIS,
         locator: { kind: 'section', value: 'Project Information' },
         evidenceRole: 'supports',
         note: 'Official project metadata: title, acronym, grant agreement ID 2048, start 1-11-1988, end 31-10-1991.',
       },
       {
-        sourceId: 'nl-src-cordis-deepuv-2048',
+        /* One Coordinator block. It supports BOTH the coordination claim and
+         * the Veldhoven ClaimPlaceLink (M0) — no separate address citation,
+         * because the address is part of this same coordinator record. */
+        id: 'nl-cit-deepuv-coordinator-cordis',
+        sourceId: CORDIS,
         locator: { kind: 'section', value: 'Coordinator' },
         evidenceRole: 'supports',
-        note: 'Official project metadata: coordinator "ASM LITHOGRAPHY" (Netherlands), as printed.',
+        note:
+          'Official project metadata: coordinator "ASM LITHOGRAPHY" ' +
+          '(Netherlands), as printed, at the recorded address ' +
+          '"MEIERIJWEG 15, 8805 5503 HN VELDHOVEN Netherlands". The postcode ' +
+          'field shows an anomalous "8805" prefix before the Dutch postcode ' +
+          '"5503 HN". This single Coordinator block is the evidence for both ' +
+          'the coordination claim and the Veldhoven ClaimPlaceLink; the ' +
+          'Veldhoven entry is a coordinator postal/address record only — not ' +
+          'proof that coordination activity physically occurred there.',
       },
     ],
     lensFacets: [],
@@ -381,16 +417,25 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
-        sourceId: 'nl-src-cordis-deepuv-2048',
+        /* One Participants block. It supports BOTH the participants claim and
+         * the Eindhoven ClaimPlaceLink (M0) — no separate address citation,
+         * because the address is part of this same participant record. */
+        id: 'nl-cit-deepuv-participants-cordis',
+        sourceId: CORDIS,
         locator: { kind: 'section', value: 'Participants' },
         evidenceRole: 'supports',
         note:
           'Official project metadata. Participants exactly as printed on the ' +
           'record: "CARL ZEISS GMBH" (DE), "Commissariat à l\'Energie ' +
           'Atomique/CEA" (FR), "FRAUNHOFER INSTITUT FÜR SILICATFORSCHUNG" ' +
-          '(DE), "HOECHST AG" (DE), "NEDERLANDSE PHILIPS BEDRIJVEN BV" (NL), ' +
+          '(DE), "HOECHST AG" (DE), "NEDERLANDSE PHILIPS BEDRIJVEN BV" (NL) ' +
+          'at the recorded address "KASTANJELAAN, 1218 5600 MD EINDHOVEN", ' +
           '"Siemens AG" (DE, two locations listed). The record states no ' +
-          'individual roles or contributions, and none are asserted.',
+          'individual roles or contributions, and none are asserted. This ' +
+          'single Participants block is the evidence for both the ' +
+          'participants claim and the Eindhoven ClaimPlaceLink; the Eindhoven ' +
+          'entry is a participant address only — not proof of a Philips ' +
+          'lithography research site or the physical location of DEEP-UV work.',
       },
     ],
     lensFacets: [],
@@ -409,7 +454,8 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
-        sourceId: 'nl-src-cordis-deepuv-2048',
+        id: 'nl-cit-deepuv-objective-cordis',
+        sourceId: CORDIS,
         locator: { kind: 'section', value: 'Objective' },
         evidenceRole: 'supports',
         note:
@@ -439,7 +485,8 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
-        sourceId: 'nl-src-cordis-deepuv-2048',
+        id: 'nl-cit-deepuv-results-cordis',
+        sourceId: CORDIS,
         locator: { kind: 'section', value: 'Objective' },
         evidenceRole: 'supports',
         note:
@@ -476,6 +523,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-pas5500-asmlir2017',
         sourceId: ASML_IR_2017,
         locator: { kind: 'section', value: '"A short company history", report page 8' },
         evidenceRole: 'supports',
@@ -503,6 +551,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-holding-asmlir2017',
         sourceId: ASML_IR_2017,
         locator: { kind: 'section', value: '"A short company history", report page 8' },
         evidenceRole: 'supports',
@@ -532,6 +581,7 @@ export const claims: Claim[] = [
     epistemicStatus: 'well_supported',
     citations: [
       {
+        id: 'nl-cit-listings-asmlir2017',
         sourceId: ASML_IR_2017,
         locator: { kind: 'section', value: '"A short company history", report page 8' },
         evidenceRole: 'supports',

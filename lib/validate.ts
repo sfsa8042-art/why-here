@@ -17,9 +17,11 @@ import type {
   AlternativeExplanation,
   Case,
   Claim,
+  ClaimPlaceLink,
   Locator,
   MechanismEdge,
   MechanismNode,
+  Place,
   ResearchQuestion,
   Source,
 } from './schemas.ts';
@@ -30,7 +32,10 @@ import type {
 
 export type RuleId =
   | 'V1' | 'V2' | 'V3' | 'V4' | 'V5' | 'V6' | 'V7' | 'V8' | 'V9' | 'V10'
-  | 'V11' | 'V12' | 'V13' | 'V14' | 'V15' | 'V16' | 'V17' | 'V18' | 'V19' | 'V20';
+  | 'V11' | 'V12' | 'V13' | 'V14' | 'V15' | 'V16' | 'V17' | 'V18' | 'V19' | 'V20'
+  /* citation identity + geographic layer (Increment M0) */
+  | 'V21' | 'G1' | 'G2' | 'G3' | 'G4' | 'G5' | 'G6' | 'G7' | 'G8' | 'G9'
+  | 'G10' | 'G11' | 'G12' | 'G13' | 'G14';
 
 export interface ValidationFailure {
   ruleId: RuleId;
@@ -47,6 +52,10 @@ export interface CaseContentModule {
   nodes: MechanismNode[];
   edges: MechanismEdge[];
   alternativeExplanations: AlternativeExplanation[];
+  /* Geographic layer (Increment M0). Optional so existing corpora/fixtures
+     that pre-date the geographic layer need no change; absent means none. */
+  places?: Place[];
+  claimPlaceLinks?: ClaimPlaceLink[];
 }
 
 export interface Corpus {
@@ -788,6 +797,147 @@ export function validateCorpus(
     if (cycle.length < 2) continue; // a self-loop is V12's self-reference, not a V13 cycle
     fail('V13', cycle[0] ?? '(unknown)',
       `limitation-reference cycle: ${[...cycle, cycle[0]].join(' -> ')}`);
+  }
+
+  /* ---------- V21 — global Citation id uniqueness + ownership map ---------- */
+
+  const citationOwner = new Map<string, string>(); // citationId -> owning claimId
+  const citationSeen = new Map<string, number>();
+  for (const module of corpus.modules) {
+    for (const claim of module.claims) {
+      for (const citation of claim.citations) {
+        citationSeen.set(citation.id, (citationSeen.get(citation.id) ?? 0) + 1);
+        if (!citationOwner.has(citation.id)) citationOwner.set(citation.id, claim.id);
+      }
+    }
+  }
+  for (const [id, count] of citationSeen) {
+    if (count > 1) {
+      fail('V21', id, `Citation id "${id}" occurs ${count} times in the corpus`);
+    }
+  }
+
+  /* ---------- G1–G14 — geographic layer (Increment M0) ---------- */
+
+  const moduleCaseIds = new Set(corpus.modules.map((m) => m.caseId));
+  const placeById = new Map<string, Place>();
+  const placeSeen = new Map<string, number>();
+  const linkSeen = new Map<string, number>();
+
+  const precisionRank: Record<string, number> = { country: 0, region: 1, city: 2, site: 3 };
+  const statusRank: Record<string, number> = {
+    insufficient: 0, contested: 1, well_supported: 2, established: 3,
+  };
+  const ADDRESS_RELATIONSHIPS = new Set<ClaimPlaceLink['relationship']>([
+    'project_coordinator_address',
+    'project_participant_address',
+    'organization_registered_address',
+  ]);
+  const geomPrecision = (p: Place): string => p.geometry.precision;
+
+  for (const module of corpus.modules) {
+    /* Places */
+    for (const place of module.places ?? []) {
+      placeSeen.set(place.id, (placeSeen.get(place.id) ?? 0) + 1);
+      if (!placeById.has(place.id)) placeById.set(place.id, place);
+
+      /* G3 — place caseId resolves and matches its module */
+      if (place.caseId !== module.caseId || !moduleCaseIds.has(place.caseId)) {
+        fail('G3', place.id,
+          `Place caseId "${place.caseId}" does not resolve to its content module "${module.caseId}"`);
+      }
+      /* G4 — geometry carries a source and attribution (coords are schema-checked) */
+      const g = place.geometry;
+      const geomSource = g.type === 'point' ? g.coordinateSource : g.geometrySource;
+      if (geomSource.trim().length === 0 || g.attributionText.trim().length === 0) {
+        fail('G4', place.id, 'Place geometry must carry a non-empty source and attribution');
+      }
+      /* G5 — kind compatible with geometry type + precision */
+      const kindOk =
+        ((place.kind === 'city' || place.kind === 'site') &&
+          g.type === 'point' && g.precision === place.kind) ||
+        ((place.kind === 'country' || place.kind === 'region') &&
+          g.type === 'administrative_area' && g.precision === place.kind);
+      if (!kindOk) {
+        fail('G5', place.id,
+          `Place kind "${place.kind}" is incompatible with its geometry (${g.type}/${g.precision})`);
+      }
+    }
+
+    /* ClaimPlaceLinks */
+    for (const link of module.claimPlaceLinks ?? []) {
+      linkSeen.set(link.id, (linkSeen.get(link.id) ?? 0) + 1);
+
+      /* G6 — link resolves to an in-case Claim and Place */
+      const claim = claimById.get(link.claimId);
+      const place = placeById.get(link.placeId);
+      if (claim === undefined || claim.caseId !== link.caseId) {
+        fail('G6', link.id,
+          `ClaimPlaceLink claimId "${link.claimId}" does not resolve to an in-case Claim`);
+      }
+      if (place === undefined || place.caseId !== link.caseId) {
+        fail('G6', link.id,
+          `ClaimPlaceLink placeId "${link.placeId}" does not resolve to an in-case Place`);
+      }
+      /* G7 — at least one citation id (schema min 1; belt-and-braces) */
+      if (link.citationIds.length === 0) {
+        fail('G7', link.id, 'ClaimPlaceLink must cite at least one Citation');
+      }
+      /* G8/G9 — every citation exists and belongs to the linked Claim */
+      for (const cid of link.citationIds) {
+        const owner = citationOwner.get(cid);
+        if (owner === undefined) {
+          fail('G8', link.id, `cited Citation id "${cid}" does not exist in the corpus`);
+        } else if (owner !== link.claimId) {
+          fail('G9', link.id,
+            `cited Citation "${cid}" belongs to Claim "${owner}", not the linked Claim "${link.claimId}"`);
+        }
+      }
+      /* G10 — epistemicStatus cannot exceed the linked Claim's status */
+      if (claim !== undefined &&
+          (statusRank[link.epistemicStatus] ?? 0) > (statusRank[claim.epistemicStatus] ?? 0)) {
+        fail('G10', link.id,
+          `ClaimPlaceLink epistemicStatus "${link.epistemicStatus}" exceeds the linked Claim's "${claim.epistemicStatus}"`);
+      }
+      /* G11 — evidencePrecision cannot exceed the Place geometry precision */
+      if (place !== undefined &&
+          (precisionRank[link.evidencePrecision] ?? 0) > (precisionRank[geomPrecision(place)] ?? 0)) {
+        fail('G11', link.id,
+          `evidencePrecision "${link.evidencePrecision}" exceeds the Place geometry precision "${geomPrecision(place)}"`);
+      }
+      /* G12 — temporal scope compatible with a structured Claim period (if any) */
+      if (claim?.timeline !== undefined) {
+        const cStart = claim.timeline.year;
+        const cEnd = claim.timeline.endYear ?? claim.timeline.year;
+        const lStart = link.temporalScope.year;
+        const lEnd = link.temporalScope.endYear ?? link.temporalScope.year;
+        if (lStart < cStart || lEnd > cEnd) {
+          fail('G12', link.id,
+            `temporalScope ${lStart}-${lEnd} falls outside the linked Claim period ${cStart}-${cEnd}`);
+        }
+      }
+      /* G13 — an address record must not be rendered at site precision
+         (that would present a postal address as a physical event/research/
+         production site without site-level evidence) */
+      if (ADDRESS_RELATIONSHIPS.has(link.relationship) && link.evidencePrecision === 'site') {
+        fail('G13', link.id,
+          `${link.relationship} may not claim site precision; an address record is not a site location`);
+      }
+      /* G14 — site precision requires an explicit site-level provenance note */
+      if (link.evidencePrecision === 'site' &&
+          (link.provenanceNote === undefined || link.provenanceNote.trim().length === 0)) {
+        fail('G14', link.id,
+          'site-precision link requires an explicit provenanceNote asserting the site-level source');
+      }
+    }
+  }
+
+  /* G1 — Place id uniqueness; G2 — ClaimPlaceLink id uniqueness */
+  for (const [id, count] of placeSeen) {
+    if (count > 1) fail('G1', id, `Place id "${id}" occurs ${count} times`);
+  }
+  for (const [id, count] of linkSeen) {
+    if (count > 1) fail('G2', id, `ClaimPlaceLink id "${id}" occurs ${count} times`);
   }
 
   return failures;

@@ -159,6 +159,13 @@ export const LocatorSchema = z.discriminatedUnion('kind', [
  */
 export const CitationSchema = z
   .object({
+    /**
+     * Stable, globally-unique, human-readable identifier. Required so that
+     * other entities (e.g. ClaimPlaceLink) can reference an exact Citation.
+     * Never an array index and never derived from position; global
+     * uniqueness is a build-blocking validator rule.
+     */
+    id: z.string().min(1),
     sourceId: z.string().min(1),
     locator: LocatorSchema,
     evidenceRole: EvidenceRoleSchema,
@@ -457,6 +464,93 @@ export const CaseSchema = z.discriminatedUnion('status', [
 ]);
 
 /* ------------------------------------------------------------------ *
+ * Geographic layer (Increment M0)
+ *
+ * A Place proves ONLY that a geographic entity and its geometry exist. It
+ * carries no historical assertion. A ClaimPlaceLink is the evidence-backed
+ * relationship between a Claim and a Place; it must cite the exact
+ * Citation(s) that locate the geographic relationship, and its typed
+ * `relationship` is authoritative (an address record is never silently
+ * upgraded to an event/research/production location). There is deliberately
+ * NO place-to-place edge schema.
+ * ------------------------------------------------------------------ */
+
+export const CoordinatePrecisionSchema = z.enum(['country', 'region', 'city', 'site']);
+
+/** Geometry as a discriminated union on `type`. */
+export const PlaceGeometrySchema = z.discriminatedUnion('type', [
+  z
+    .object({
+      type: z.literal('point'),
+      longitude: z.number().min(-180).max(180),
+      latitude: z.number().min(-90).max(90),
+      precision: z.enum(['city', 'site']),
+      coordinateSource: z.string().min(1),
+      attributionText: z.string().min(1),
+      accessedAt: z.string().datetime().optional(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal('administrative_area'),
+      adminCode: z.string().min(1),
+      precision: z.enum(['country', 'region']),
+      geometrySource: z.string().min(1),
+      attributionText: z.string().min(1),
+      accessedAt: z.string().datetime().optional(),
+    })
+    .strict(),
+]);
+
+export const PlaceKindSchema = z.enum(['country', 'region', 'city', 'site']);
+
+export const PlaceSchema = z
+  .object({
+    id: z.string().min(1),
+    caseId: z.string().min(1),
+    name: z.string().min(1),
+    countryCode: z.string().min(2).max(2),
+    kind: PlaceKindSchema,
+    geometry: PlaceGeometrySchema,
+  })
+  .strict();
+
+export const ClaimPlaceRelationshipSchema = z.enum([
+  'event_location',
+  'organization_registered_address',
+  'project_coordinator_address',
+  'project_participant_address',
+  'research_site',
+  'production_site',
+  'listing_venue',
+  'administrative_scope',
+  'organization_country_affiliation',
+  'context_only',
+]);
+
+/**
+ * temporalScope reuses the existing period structure (TimelineProjection:
+ * `year` start, optional `endYear`), so the corpus keeps a single temporal
+ * model. Every ClaimPlaceLink is an evidence assertion and MUST carry at
+ * least one Citation id — including `context_only`.
+ */
+export const ClaimPlaceLinkSchema = z
+  .object({
+    id: z.string().min(1),
+    caseId: z.string().min(1),
+    claimId: z.string().min(1),
+    placeId: z.string().min(1),
+    relationship: ClaimPlaceRelationshipSchema,
+    temporalScope: TimelineProjectionSchema,
+    citationIds: z.array(z.string().min(1)).min(1),
+    evidencePrecision: CoordinatePrecisionSchema,
+    locatorNote: z.string().min(1),
+    epistemicStatus: EpistemicStatusSchema,
+    provenanceNote: z.string().min(1).optional(),
+  })
+  .strict();
+
+/* ------------------------------------------------------------------ *
  * Inferred TypeScript types (single source of truth)
  * ------------------------------------------------------------------ */
 
@@ -490,3 +584,10 @@ export type FlagshipCase = z.infer<typeof FlagshipCaseSchema>;
 export type ResearchCase = z.infer<typeof ResearchCaseSchema>;
 export type PreviewCase = z.infer<typeof PreviewCaseSchema>;
 export type Case = z.infer<typeof CaseSchema>;
+
+export type CoordinatePrecision = z.infer<typeof CoordinatePrecisionSchema>;
+export type PlaceGeometry = z.infer<typeof PlaceGeometrySchema>;
+export type PlaceKind = z.infer<typeof PlaceKindSchema>;
+export type Place = z.infer<typeof PlaceSchema>;
+export type ClaimPlaceRelationship = z.infer<typeof ClaimPlaceRelationshipSchema>;
+export type ClaimPlaceLink = z.infer<typeof ClaimPlaceLinkSchema>;

@@ -21,6 +21,7 @@ export const causalClaimMissingLimitations: unknown = {
   epistemicStatus: 'well_supported',
   citations: [
     {
+      id: 'invalid-cit-causal-no-limitations',
       sourceId: 'fixture-academic-a',
       locator: { kind: 'section', value: '4.1' },
       evidenceRole: 'supports',
@@ -44,6 +45,7 @@ export const causalClaimEmptyLimitations: unknown = {
   epistemicStatus: 'well_supported',
   citations: [
     {
+      id: 'invalid-cit-causal-empty-limitations',
       sourceId: 'fixture-academic-a',
       locator: { kind: 'section', value: '4.1' },
       evidenceRole: 'supports',
