@@ -1,0 +1,483 @@
+/*
+ * Why Here? — global styles (UI slice, Mapbox-console visual language).
+ *
+ * DARK ONLY. Adapts Mapbox's "satellite console at midnight" language to an
+ * original research instrument: a near-black void, depth through four layered
+ * dark surfaces (not shadows or ruled dividers), a single Signal-Blue accent
+ * reserved for interactive/active states, geometric sans, sharp data-table
+ * badges, and evidence strength encoded as luminance. No light theme, no
+ * prefers-color-scheme override, no theme switcher.
+ */
+
+:root {
+  /* Surfaces — four-step dark scale (depth through layering) */
+  --page: #0e1012;
+  --panel: #15171b;
+  --raised: #1c1f24;
+  --overlay: #23262d;
+
+  /* Borders — subtle panel edges only (never section dividers) */
+  --border-subtle: #333943;
+  --border-strong: #444d5a;
+
+  /* Text ladder */
+  --text-primary: #ffffff;
+  --text-strong: #d5dae2;
+  --text-elevated: #bbc2ce;
+  --text-body: #a0aaba;
+  --text-muted: #8b96aa;
+  --text-faint: #566171;
+
+  /* Single chromatic signal — interactive / active only */
+  --signal: #007afc;
+  --signal-deep: #0062ca;
+
+  /* Type — DM Sans is loaded via next/font/google (see app/layout.tsx),
+     exposed as --font-dm-sans; the stack below is the fallback chain. */
+  --font: var(--font-dm-sans), "Plus Jakarta Sans", ui-sans-serif, system-ui,
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* Radii — pill | card | chip | badge/input, nothing in between */
+  --r-pill: 100px;
+  --r-card: 24px;
+  --r-chip: 12px;
+  --r-badge: 4px;
+  --r-input: 6px;
+
+  --maxw: 1100px;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background: var(--page);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-body);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  font-feature-settings: "lnum" 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: rgba(0, 122, 252, 0.30); color: #fff; }
+
+a { color: var(--signal); text-decoration: none; }
+a:hover { color: #3f9bff; }
+a:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+  border-radius: var(--r-badge);
+}
+
+/* ------------------------------------------------------------------ *
+ * Shell
+ * ------------------------------------------------------------------ */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 clamp(20px, 5vw, 40px);
+  background: rgba(14, 16, 18, 0.82);
+  backdrop-filter: saturate(140%) blur(10px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.topbar .wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  font-size: 15px;
+}
+/* Wordmark punctuation is decorative, not an interactive state — kept neutral. */
+.topbar .wordmark .dot { color: var(--text-primary); }
+.topbar .tagline {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 56px) clamp(20px, 5vw, 40px) 120px;
+}
+
+/* Sections separated by space + surface, never ruled dividers */
+section { margin-top: 56px; }
+
+.eyebrow {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+h1 {
+  margin: 0;
+  font-weight: 700;
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px 20px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* Section headings read as console labels, not marketing headers */
+h2 {
+  margin: 0 0 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+p { margin: 0.5rem 0; }
+
+.lead {
+  margin: 4px 0 0;
+  max-width: 62ch;
+  font-size: clamp(16px, 2.2vw, 19px);
+  line-height: 1.5;
+  color: var(--text-body);
+}
+
+/* Status: outlined pill, neutral (blue is reserved for actions) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill);
+  color: var(--text-elevated);
+  background: var(--panel);
+}
+.status-pill::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 0 3px rgba(0, 122, 252, 0.22);
+}
+
+/* ------------------------------------------------------------------ *
+ * Counts — instrument readout
+ * ------------------------------------------------------------------ */
+
+.counts {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  margin: 28px 0 0;
+  padding: 20px 24px;
+  background: var(--panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-card);
+}
+.counts .n {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.counts .k {
+  margin-top: 8px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------------ *
+ * Research questions — cards
+ * ------------------------------------------------------------------ */
+
+.rq-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.rq-list li {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-chip);
+  padding: 16px 18px 16px 40px;
+  color: var(--text-body);
+  line-height: 1.5;
+}
+.rq-list li::before {
+  content: "?";
+  position: absolute;
+  left: 16px;
+  top: 15px;
+  font-weight: 700;
+  color: var(--text-faint);
+}
+/* home case list is simpler */
+.case-list li { padding-left: 18px; }
+.case-list li::before { content: none; }
+
+/* ------------------------------------------------------------------ *
+ * Home — case card
+ * ------------------------------------------------------------------ */
+
+.case-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 20px;
+  padding: 24px;
+  background: var(--panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-card);
+}
+.case-card:hover { border-color: var(--border-strong); }
+.case-card .cc-title { font-size: 20px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em; }
+.case-card .cc-sub { margin-top: 6px; font-size: 13px; color: var(--text-muted); }
+.case-card .cc-open { color: var(--signal); font-weight: 500; white-space: nowrap; }
+
+/* ------------------------------------------------------------------ *
+ * Evidence boundary — phases with density meters
+ * ------------------------------------------------------------------ */
+
+.phases { display: grid; gap: 8px; }
+
+.phase {
+  display: grid;
+  grid-template-columns: 1fr 190px;
+  align-items: center;
+  gap: 12px 20px;
+  background: var(--panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-chip);
+  padding: 16px 18px;
+}
+.phase .ph-label { font-weight: 600; color: var(--text-strong); }
+.phase .ph-years { color: var(--text-faint); font-family: var(--mono); font-size: 12px; margin-left: 6px; }
+.phase .ph-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.phase .ph-figures { display: flex; align-items: baseline; gap: 10px; }
+.cov { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; }
+.phase .ph-count { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+
+/* density meter: width ∝ claim count, brightness ∝ coverage strength */
+.ph-meter {
+  width: 100%;
+  height: 4px;
+  border-radius: var(--r-badge);
+  background: var(--overlay);
+  overflow: hidden;
+}
+.ph-meter > span { display: block; height: 100%; border-radius: var(--r-badge); background: var(--text-muted); }
+
+/* Coverage luminance ladder — strength reads as light */
+.phase[data-cov="strong"] .cov { color: var(--text-primary); }
+.phase[data-cov="substantial"] .cov { color: var(--text-strong); }
+.phase[data-cov="partial"] .cov { color: var(--text-body); }
+.phase[data-cov="insufficient"] .cov { color: var(--text-muted); }
+.phase[data-cov="attributed only"] .cov { color: var(--text-muted); }
+.phase[data-cov="strong"] .ph-meter > span { background: var(--text-strong); }
+.phase[data-cov="substantial"] .ph-meter > span { background: var(--text-body); }
+.phase[data-cov="partial"] .ph-meter > span { background: var(--text-muted); }
+.phase[data-cov="insufficient"] .ph-meter > span { background: var(--text-faint); }
+.phase[data-cov="attributed only"] .ph-meter > span { background: var(--text-faint); }
+
+.boundary-note {
+  margin-top: 16px;
+  max-width: 68ch;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------------ *
+ * Chronological spine + claim drawer
+ * ------------------------------------------------------------------ */
+
+.spine { display: grid; gap: 8px; }
+
+.claim {
+  background: var(--panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-chip);
+  overflow: hidden;
+}
+.claim[open] { border-color: var(--border-strong); background: var(--raised); }
+
+.claim > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  gap: 20px;
+  align-items: start;
+  position: relative;
+}
+.claim > summary::-webkit-details-marker { display: none; }
+.claim > summary:hover { background: var(--raised); }
+.claim[open] > summary:hover { background: transparent; }
+.claim > summary:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
+  border-radius: var(--r-chip);
+}
+/* active-claim accent — the one place blue marks state in the list */
+.claim[open] > summary::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--signal);
+}
+
+.claim .c-period {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-faint);
+  padding-top: 2px;
+  letter-spacing: 0.01em;
+}
+.claim .c-statement { color: var(--text-elevated); line-height: 1.5; }
+.claim[open] .c-statement { color: var(--text-primary); }
+.claim .c-badges { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* Sharp data-table badges */
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: var(--r-badge);
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  background: transparent;
+  white-space: nowrap;
+}
+/* type: factual is quiet outline; interpretive is filled/inverted (shape, not hue) */
+.badge[data-type="factual"] { color: var(--text-muted); }
+.badge[data-type="interpretive"] {
+  background: var(--overlay);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+/* status: differentiate by weight/luminance within the neutral field */
+.badge[data-status="established"] { color: var(--text-primary); border-color: var(--text-faint); }
+.badge[data-status="well_supported"] { color: var(--text-elevated); }
+.badge[data-status="contested"] { color: var(--text-body); }
+.badge[data-status="insufficient"] { color: var(--text-muted); }
+/* attributed marker: sharp, with a leading caret so it reads as a qualifier */
+.badge.attr { color: var(--text-muted); border-style: dashed; }
+.badge.attr::before { content: "▹ "; color: var(--text-faint); }
+
+.c-src { font-size: 12px; color: var(--text-faint); font-family: var(--mono); }
+
+/* Drawer — nested raised surfaces, no ruled dividers */
+.drawer { padding: 4px 18px 18px; background: transparent; }
+.drawer .d-statement { margin: 0 0 14px; color: var(--text-body); line-height: 1.55; max-width: 74ch; }
+
+.cite {
+  background: var(--overlay);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-input);
+  padding: 14px 16px;
+  margin: 8px 0;
+}
+.cite .cite-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: baseline; }
+.cite .cite-title { font-weight: 600; font-size: 14px; color: var(--text-strong); }
+.cite .cite-class { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--text-muted); text-transform: uppercase; }
+.cite .cite-loc { font-family: var(--mono); font-size: 12px; color: var(--text-body); margin-top: 8px; }
+.cite .cite-note { font-size: 13.5px; line-height: 1.5; color: var(--text-body); margin-top: 10px; }
+/* provenance: a nested raised block (surface change, not a border rule) */
+.cite .cite-prov {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--raised);
+  border-radius: var(--r-input);
+}
+
+.tech-details { margin-top: 12px; }
+.tech-details > summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px; /* accessible tap target */
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-family: var(--mono);
+}
+.tech-details > summary::-webkit-details-marker { display: none; }
+.tech-details > summary::before { content: "+ "; }
+.tech-details[open] > summary::before { content: "− "; }
+.tech-details > summary:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.tech-details p { font-size: 12px; color: var(--text-muted); }
+.tech-details code { font-family: var(--mono); font-size: 11px; color: var(--text-body); background: var(--overlay); padding: 1px 5px; border-radius: var(--r-badge); }
+
+/* ------------------------------------------------------------------ *
+ * Responsive
+ * ------------------------------------------------------------------ */
+
+@media (max-width: 680px) {
+  .claim > summary { grid-template-columns: 1fr; gap: 8px; }
+  .claim .c-period { padding-top: 0; }
+  .phase { grid-template-columns: 1fr; }
+  .phase .ph-meta { align-items: stretch; }
+  .phase .ph-figures { justify-content: space-between; }
+  .counts { gap: 24px 32px; }
+  .case-card { flex-direction: column; align-items: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
