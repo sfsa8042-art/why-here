@@ -86,7 +86,7 @@ interface AtlasCase {
   status: CaseStatus;               // published | in_research | planned
   navigationGeometry: NavigationGeometry;   // locate-and-open only (see contract note)
   coverMediaId?: string;            // optional rights-cleared card image (role-typed MediaAsset)
-  availableModes: AtlasMode[];      // [] for planned; ['explore','evidence'] once the gate is met
+  availableModes: AtlasMode[];      // [] for planned; ['evidence'] once the Evidence gate passes; add 'explore' once the Explore gate passes
 }
 ```
 
@@ -114,8 +114,10 @@ interface AtlasCase {
     (a non-planned case must have a real corpus behind it).
   - `R3` `navigationGeometry.kind: 'country'` requires a valid ISO-3166 code; `'point'`
     requires a `label` (no bare centroid).
-  - `R4` `availableModes` is empty for `planned`; for `in_research` / `published` it must
-    equal `['explore','evidence']` **and** the case must pass the **publication gate** (§B.4).
+  - `R4` `availableModes` is empty for `planned`. For a non-planned case it lists exactly
+    the gates actually passed (§B.4): include `'evidence'` iff the Evidence gate passes and
+    `'explore'` iff the stricter Explore gate passes. `'explore'` may not appear without
+    `'evidence'`. (Netherlands at launch: `['evidence']` — see §B.3.)
   - `R5` `coverMediaId`, if present, must resolve to a `MediaAsset` that is
     `permittedForPublicWebsite === true` (see contract #3).
   - `R6` a `planned` case must have **no** linked Claims, Sources, Places, or ClaimPlaceLinks.
@@ -138,15 +140,18 @@ interface AtlasCase {
 
 The initial Atlas index ships with exactly:
 
-| Case | Industry | Status | Modes at launch |
-|---|---|---|---|
-| Netherlands × Semiconductor Equipment | Semiconductor equipment | **`in_research`** | Explore **and** Evidence (meets the gate) |
-| Taiwan × Semiconductor Manufacturing | Semiconductor manufacturing | **`planned`** | none — no fabricated explorer |
-| France × Luxury | Luxury goods | **`planned`** | none — no fabricated explorer |
+| Case | Industry | Status | `availableModes` at launch | CTAs |
+|---|---|---|---|---|
+| Netherlands × Semiconductor Equipment | Semiconductor equipment | **`in_research`** | **`['evidence']`** | **Evidence** (primary) + *optional* secondary **"Open research map prototype"**; **no `Explore case` CTA yet** |
+| Taiwan × Semiconductor Manufacturing | Semiconductor manufacturing | **`planned`** | **`[]`** | none — no fabricated explorer |
+| France × Luxury | Luxury goods | **`planned`** | **`[]`** | none — no fabricated explorer |
 
-> Note: Netherlands is **`in_research`**, not `published`. It has a real corpus (17 claims,
-> 5 sources, 2 anchors) and therefore may expose Explore + Evidence, but it is honestly
-> labelled *in research* — its "why here" chapters are not yet sourced (§F).
+> **The M1 interactive map is an internal/public research prototype and does not satisfy
+> the Explore publication gate.** At Stage 1 the Netherlands case therefore exposes
+> **Evidence only** (`availableModes: ['evidence']`), with an *optional* secondary link to
+> the research-map prototype. Netherlands is `in_research`, not `published`: it has a real
+> corpus (17 claims, 5 sources, 2 anchors) but its "why here" chapters are not yet sourced
+> (§F), and **no public Explore experience exists yet** (see §B.4 for the enablement gate).
 
 **How `planned` cases appear (enforced):**
 - Visibly distinct status (dashed outline / "planned" chip; muted card).
@@ -162,15 +167,25 @@ The initial Atlas index ships with exactly:
 
 - **Evidence gate:** the case has a loadable production corpus — **≥ 1 Source and ≥ 1
   Claim** that pass all existing V-series / G-series validators. (Netherlands passes.)
-- **Explore gate (stricter):** the Evidence gate **plus** at least **one `supported`
-  `NarrativeChapter`** (contract #2) whose prose is fully traceable to production Claims,
-  and every rendered `MediaAsset` is `permittedForPublicWebsite` (contract #3).
+- **Explore gate (stricter) — all four required:** (1) the Evidence gate passes; (2) at
+  least **one `supported` `NarrativeChapter`** (contract #2) exists whose prose is fully
+  traceable to production Claims; (3) every linked/rendered `MediaAsset` passes the
+  public-use rights gate (`permittedForPublicWebsite === true`, contract #3); and (4) the
+  ordinary-user visual experience passes review.
 - A `planned` case, by definition, passes **neither** gate → `availableModes: []`.
-- Failing the gate is **build-blocking** for that case's routes: `/atlas/:slug` and
-  `/evidence/:slug` are not generated for a case that does not meet the relevant gate.
+- Failing a gate is **build-blocking** for the corresponding public route: `/evidence/:slug`
+  requires the Evidence gate; `/atlas/:slug` (Explore) requires the Explore gate. A route is
+  not generated for a case that does not meet its gate.
 
-> Netherlands at launch: passes the Evidence gate today; passes the Explore gate once its
-> first `supported` chapter (e.g. *DEEP-UV, 1988–1991*) is authored from existing Claims.
+> **The M1 interactive map is an internal/public research prototype and does not satisfy
+> the Explore publication gate.** Netherlands passes the **Evidence** gate today, so at
+> launch `availableModes: ['evidence']` (Evidence CTA + an optional secondary link to the
+> research-map prototype). Public **Explore** for Netherlands is enabled — i.e. `'explore'`
+> is added to `availableModes` — **only after all of:**
+> 1. at least one `supported` `NarrativeChapter` exists;
+> 2. its prose is traceable to production Claims;
+> 3. its linked media pass the public-use rights gate (`permittedForPublicWebsite`);
+> 4. the ordinary-user visual experience passes review.
 
 ### B.5 — Layout, filters, cards, responsive
 
@@ -584,8 +599,10 @@ drawer; the research components; and all **209 tests**.
 - **World-map** case navigation (navigation geometry only, with the contract legend).
 - **Status and industry filters.**
 - **Visual case preview** cards.
-- **Netherlands link to the existing foundation** (opens the M1 atlas/evidence routes via
-  the new redirects).
+- **Netherlands `Evidence` access:** a primary **Evidence** CTA (opens
+  `/evidence/netherlands-semiconductor-equipment`) **plus an optional secondary
+  "Open research map prototype"** link to the M1 interactive map. **No `Explore case` CTA**
+  — the M1 map does not satisfy the Explore gate (§B.4).
 - **Honest `planned` states** for Taiwan and France (no explorer, no claims, no counts).
 - **Route scaffolding and redirects** (`/cases/*` → `/atlas|evidence/*`).
 
@@ -598,16 +615,21 @@ drawer; the research components; and all **209 tests**.
 
 ### Later stages
 
-- **Stage 2 — Mode split:** move the research UI to `/evidence/:slug`; stand up the
-  `/atlas/:slug` Explore shell + `Explore | Evidence` switch + deep-link preservation.
-- **Stage 3 — Story rail + chapters:** add the `NarrativeChapter` model + C-series
-  validation + filmstrip; author only `supported` chapters (spine 1–5); render 6–12 as
-  `needs_research`.
-- **Stage 4 — Media model:** add `MediaAsset`/`MediaLink` + M-series validators + loader;
-  wire role-typed, rights-cleared images.
-- **Stage 5 — NL visual research pack:** execute §F; upgrade `needs_research` chapters to
-  `supported` only as sources land.
-- **Stage 6 — Additional cases:** Taiwan, France, … each repeats Stages 3–5 (and its own
+Stage 1 provides the Atlas index, **Evidence** access, and *optional* research-prototype
+access. The public **Explore** experience is built and enabled only across the later
+stages — never at Stage 1.
+
+- **Stage 2 — Media model, rights validation & ingestion:** add `MediaAsset`/`MediaLink` +
+  M-series validators + loader; ingest the first rights-cleared assets. No public Explore yet.
+- **Stage 3 — First `supported` Netherlands visual chapters:** add the `NarrativeChapter`
+  model + C-series validation, the `/atlas/:slug` Explore shell, the `Explore | Evidence`
+  switch, and the filmstrip; author only `supported` chapters (spine 1–5) and render 6–12 as
+  `needs_research`. **Enable Netherlands `Explore` (add `'explore'` to `availableModes` and
+  the `Explore case` CTA) ONLY after** the four-point Explore-enablement gate is met (§B.4),
+  including review.
+- **Stage 4 — NL visual research pack (§F):** upgrade `needs_research` chapters to
+  `supported` only as located sources land.
+- **Stage 5 — Additional cases:** Taiwan, France, … each repeats Stages 2–4 (and its own
   research pack) behind the Stage-1 index; a case leaves `planned` only after passing the
   publication gate (§B.4).
 
@@ -635,6 +657,6 @@ This document explicitly covers:
 3. **`AtlasCase` contract:** §B.1 — typed registry separate from `Place`/`ClaimPlaceLink`, with the navigation-geometry contract note, loader, R-series validation, and selectors.
 4. **`NarrativeChapter` contract:** §C.1 — typed chapter + C-series validation/editorial rules; §C.2 grades the 12 Netherlands chapters (1–5 supported/partial, 6–12 needs-research).
 5. **Media-rights gate:** §E — `MediaRights` (`status`, `licenseName`, `licenseUrl`, `rightsHolder`, `requiredCreditLine`, `permittedForPublicWebsite`, `permittedForPortfolioPresentation`) + M-series build-blocking rules (no restricted/unknown in public Explore; credit required; present-day ≠ historical; decorative ≠ evidence; availability ≠ permission).
-6. **Publication gates:** §B.4 — Evidence gate (≥1 Source + ≥1 valid Claim); Explore gate (Evidence gate + ≥1 `supported` chapter + all media `permittedForPublicWebsite`); `planned` passes neither; failing is build-blocking for that case's routes.
-7. **Revised Stage 1:** §I — `/atlas` + registry/validation + world-map navigation + status/industry filters + case preview + NL link + honest planned Taiwan/France + route scaffolding/redirects; explicitly no chapters, media, NL stories, fake pages, or new findings.
+6. **Publication gates:** §B.4 — Evidence gate (≥1 Source + ≥1 valid Claim); **Explore gate = all four:** Evidence gate + ≥1 `supported` chapter traceable to Claims + all media `permittedForPublicWebsite` + visual-experience review. `planned` passes neither; failing a gate is build-blocking for the corresponding route. **The M1 map is a research prototype and does not satisfy the Explore gate** — Netherlands launches `['evidence']`.
+7. **Revised Stage 1:** §I — `/atlas` + registry/validation + world-map navigation + status/industry filters + case preview + **Netherlands `Evidence` CTA + optional "Open research map prototype" link (no `Explore case` CTA)** + honest planned Taiwan/France + route scaffolding/redirects; explicitly no chapters, media, NL stories, fake pages, or new findings.
 8. **`git status --short`:** *(recorded in the delivery message after the docs commit).*
