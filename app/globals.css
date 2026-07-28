@@ -32,9 +32,9 @@
   --signal: #007afc;
   --signal-deep: #0062ca;
 
-  /* Type — DM Sans is loaded via next/font/google (see app/layout.tsx),
-     exposed as --font-dm-sans; the stack below is the fallback chain. */
-  --font: var(--font-dm-sans), "Plus Jakarta Sans", ui-sans-serif, system-ui,
+  /* Type — DM Sans (variable) is self-hosted via @fontsource-variable/dm-sans
+     (imported in app/layout.tsx); the stack below is the fallback chain. */
+  --font: "DM Sans Variable", "Plus Jakarta Sans", ui-sans-serif, system-ui,
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
   --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
@@ -470,6 +470,210 @@ p { margin: 0.5rem 0; }
   .phase .ph-figures { justify-content: space-between; }
   .counts { gap: 24px 32px; }
   .case-card { flex-direction: column; align-items: flex-start; }
+}
+
+/* ------------------------------------------------------------------ *
+ * Atlas (M1) — full-viewport map-first shell
+ * ------------------------------------------------------------------ */
+
+.atlas-open-link {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--signal);
+  white-space: nowrap;
+}
+
+.atlas-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+  color: var(--text-body);
+  font-family: var(--font);
+  overflow: hidden;
+}
+.atlas-topbar, .atlas-segmented, .atlas-timeline { flex: 0 0 auto; }
+
+.atlas-topbar {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--panel);
+  overflow: hidden;
+}
+.atlas-wordmark { font-weight: 700; letter-spacing: 0.02em; color: var(--text-primary); font-size: 13px; }
+.atlas-case { font-weight: 600; color: var(--text-strong); font-size: 14px; white-space: nowrap; }
+.atlas-status-pill {
+  font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase;
+  padding: 4px 10px; border: 1px solid var(--border-strong); border-radius: var(--r-pill);
+  color: var(--text-elevated); white-space: nowrap;
+}
+.atlas-anchors { font-family: var(--mono); font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.atlas-evidence-link { margin-left: auto; color: var(--signal); font-weight: 600; font-size: 13px; white-space: nowrap; }
+
+.atlas-segmented { display: none; }
+
+.atlas-body { position: relative; flex: 1 1 auto; display: grid; grid-template-columns: 250px 1fr; min-height: 0; }
+
+/* Left rail */
+.atlas-rail {
+  border-right: 1px solid var(--border-subtle);
+  background: var(--panel);
+  padding: 16px 14px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.rail-group { display: flex; flex-direction: column; gap: 8px; }
+.rail-heading { margin: 0 0 2px; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
+.rail-btn {
+  text-align: left; cursor: pointer;
+  background: var(--raised); border: 1px solid var(--border-subtle); border-radius: var(--r-chip);
+  padding: 8px 10px; color: var(--text-body); font-size: 13px; min-height: 40px;
+}
+.rail-btn:hover { border-color: var(--border-strong); }
+.rail-btn[aria-pressed="true"] { border-color: var(--signal); color: var(--text-primary); box-shadow: inset 2px 0 0 var(--signal); }
+.rail-btn:focus-visible, .atlas-place-btn:focus-visible, .seg-btn:focus-visible,
+.atlas-tick:focus-visible, .drawer-close:focus-visible, .atlas-marker:focus-visible {
+  outline: 2px solid var(--signal); outline-offset: 2px;
+}
+.rail-reset { text-align: center; }
+
+.atlas-place-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.atlas-place-btn {
+  width: 100%; text-align: left; cursor: pointer;
+  background: var(--raised); border: 1px solid var(--border-subtle); border-radius: var(--r-chip);
+  padding: 10px; display: flex; flex-direction: column; gap: 3px; min-height: 44px;
+}
+.atlas-place-btn:hover { border-color: var(--border-strong); }
+.atlas-place-btn[aria-pressed="true"] { border-color: var(--signal); }
+.apb-name { color: var(--text-primary); font-weight: 600; font-size: 14px; }
+.apb-meta { font-family: var(--mono); font-size: 10.5px; color: var(--text-muted); }
+
+/* Map stage */
+.atlas-stage { position: relative; min-height: 0; background: var(--page); overflow: hidden; }
+.atlas-map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.atlas-map-status {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-family: var(--mono); font-size: 13px; pointer-events: none;
+}
+.atlas-map-annotation {
+  position: absolute; left: 12px; bottom: 10px; margin: 0; z-index: 2;
+  font-family: var(--mono); font-size: 11px; color: var(--text-elevated);
+  background: rgba(14,16,18,0.72); border: 1px solid var(--border-subtle);
+  border-radius: var(--r-badge); padding: 6px 10px; max-width: 60%;
+}
+/* compact, NON-blocking "slow" overlay (map stays interactive underneath) */
+.atlas-map-slow {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5;
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(21,23,27,0.92); border: 1px solid var(--border-strong);
+  border-radius: var(--r-chip); padding: 8px 12px;
+  font-size: 12.5px; color: var(--text-elevated);
+}
+.atlas-map-slow .rail-btn { padding: 6px 10px; min-height: 36px; }
+
+.rb-phase-label { display: block; color: inherit; }
+.rb-phase-years { display: block; font-family: var(--mono); font-size: 10px; color: var(--text-faint); margin-top: 2px; }
+.rail-btn[aria-pressed="true"] .rb-phase-years { color: var(--text-muted); }
+.rail-note { font-size: 11.5px; color: var(--text-muted); margin: 4px 0 0; line-height: 1.4; }
+
+/* Markers (DOM buttons) */
+.atlas-marker {
+  cursor: pointer; background: transparent; border: 0; padding: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.atlas-marker-dot { width: 14px; height: 14px; border-radius: 50%; }
+.atlas-marker[data-role="coordinator"] .atlas-marker-dot { background: var(--text-primary); border: 2px solid var(--page); }
+.atlas-marker[data-role="participant"] .atlas-marker-dot { background: var(--page); border: 2px solid var(--text-primary); }
+.atlas-marker.is-active .atlas-marker-dot { box-shadow: 0 0 0 3px var(--signal); }
+.atlas-marker-label {
+  font-family: var(--mono); font-size: 11px; color: var(--text-primary);
+  background: rgba(14,16,18,0.78); padding: 1px 5px; border-radius: var(--r-badge); white-space: nowrap;
+}
+
+/* Fallback */
+.atlas-fallback {
+  position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px;
+  align-items: flex-start; justify-content: center; padding: 24px; overflow-y: auto;
+}
+.atlas-fallback-reason { color: var(--cov-insufficient, #e07a7a); font-size: 13px; margin: 0; }
+.atlas-fallback-lead { color: var(--text-body); font-size: 14px; margin: 0; }
+.atlas-fallback .atlas-place-list { width: min(420px, 100%); }
+.atlas-fallback-link { color: var(--signal); font-weight: 600; }
+
+/* Drawer */
+.atlas-drawer {
+  position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 42vw); z-index: 4;
+  background: var(--panel); border-left: 1px solid var(--border-strong);
+  padding: 16px 18px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.drawer-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.atlas-drawer h2 { margin: 0; font-size: 18px; text-transform: none; letter-spacing: -0.01em; color: var(--text-primary); }
+.atlas-drawer h2:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+.drawer-close {
+  cursor: pointer; background: var(--raised); border: 1px solid var(--border-subtle);
+  border-radius: var(--r-badge); color: var(--text-body); width: 32px; height: 32px; font-size: 13px;
+}
+.geo-meta { margin: 0; display: grid; gap: 6px; }
+.geo-meta > div { display: grid; grid-template-columns: 96px 1fr; gap: 8px; }
+.geo-meta dt { font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--text-muted); }
+.geo-meta dd { margin: 0; font-size: 13px; color: var(--text-body); }
+.geo-none { color: var(--text-elevated); font-size: 14px; border: 1px dashed var(--border-strong); border-radius: var(--r-chip); padding: 12px; }
+.geo-limits { border-top: 1px solid var(--border-subtle); padding-top: 10px; }
+.geo-limits-h { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 4px; }
+.geo-limits p { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin: 4px 0; }
+.geo-prov { border-left: 2px solid var(--border-strong); padding-left: 8px; }
+.evidence-body .d-statement { color: var(--text-strong); }
+
+/* Timeline */
+.atlas-timeline { border-top: 1px solid var(--border-subtle); background: var(--panel); padding: 8px 12px; }
+.atlas-timeline-track { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.atlas-tick {
+  flex: 0 0 auto; cursor: pointer; min-width: 84px; min-height: 56px;
+  background: var(--raised); border: 1px solid var(--border-subtle); border-radius: var(--r-chip);
+  padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start;
+  color: var(--text-body);
+}
+.atlas-tick:hover { border-color: var(--border-strong); }
+.atlas-tick[aria-pressed="true"] { border-color: var(--signal); box-shadow: inset 0 2px 0 var(--signal); }
+.atlas-tick[data-dimmed="yes"] { opacity: 0.4; }
+.atlas-tick[data-mappable="no"] { border-style: dashed; }
+.atlas-tick[data-type="interpretive"] { background: var(--overlay); }
+.tick-period { font-family: var(--mono); font-size: 10px; color: var(--text-faint); }
+.tick-mark { width: 100%; height: 3px; border-radius: 2px; background: var(--text-faint); }
+.atlas-tick[data-mappable="yes"] .tick-mark { background: var(--text-elevated); }
+.tick-flags { font-family: var(--mono); font-size: 9.5px; color: var(--text-muted); }
+
+/* Mobile: segmented panes */
+@media (max-width: 680px) {
+  .atlas-body { grid-template-columns: 1fr; }
+  .atlas-segmented { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); background: var(--panel); }
+  .seg-btn {
+    flex: 1; cursor: pointer; min-height: 44px; border-radius: var(--r-chip);
+    background: var(--raised); border: 1px solid var(--border-subtle); color: var(--text-body); font-size: 13px;
+  }
+  .seg-btn[aria-pressed="true"] { border-color: var(--signal); color: var(--text-primary); }
+  .atlas-topbar { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px 12px; }
+  .atlas-case { font-size: 13px; }
+  .atlas-drawer { width: 100%; border-left: 0; }
+
+  .atlas-shell[data-pane="map"] .atlas-rail,
+  .atlas-shell[data-pane="map"] .atlas-timeline,
+  .atlas-shell[data-pane="map"] .atlas-drawer { display: none; }
+  .atlas-shell[data-pane="timeline"] .atlas-rail,
+  .atlas-shell[data-pane="timeline"] .atlas-stage,
+  .atlas-shell[data-pane="timeline"] .atlas-drawer { display: none; }
+  .atlas-shell[data-pane="timeline"] .atlas-timeline-track { flex-wrap: wrap; }
+  .atlas-shell[data-pane="evidence"] .atlas-stage,
+  .atlas-shell[data-pane="evidence"] .atlas-timeline { display: none; }
+  .atlas-shell[data-pane="evidence"] .atlas-rail { border-right: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

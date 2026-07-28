@@ -1,0 +1,52 @@
+{
+  "verification": {
+    "loaded": true,
+    "areTilesLoaded": true,
+    "markers": 2,
+    "canvasH": 863,
+    "stageH": 863,
+    "attribution": "OpenFreeMap © OpenMapTiles Data from OpenStreetMap | OpenFre",
+    "slowOverlay": false,
+    "horizOverflow": 0,
+    "idleFired": true
+  },
+  "veldhoven": {
+    "heading": "Veldhoven",
+    "hasCoord": true,
+    "hasCitation": false,
+    "markerActive": true
+  },
+  "eindhoven": {
+    "heading": "Eindhoven",
+    "hasParticipants": true
+  },
+  "nonMappable": {
+    "heading": "No geographic anchor",
+    "geoNone": "No verified geographic anchor in the current evidence.",
+    "markersActive": 0
+  },
+  "founding": {
+    "note": "No verified geographic anchor in this phase.",
+    "markersVisible": 0,
+    "dimmedTicks": 12
+  },
+  "techDev": {
+    "markersVisible": 2,
+    "litTicks": 4,
+    "dimmedTicks": 13
+  },
+  "mobileMap": {
+    "markers": 2,
+    "horizOverflow": 0,
+    "attribution": true
+  },
+  "mobileEvidence": {
+    "drawer": "Eindhoven",
+    "pane": "evidence",
+    "horizOverflow": 0
+  },
+  "research": {
+    "hasAtlasLink": true,
+    "title": "Netherlands × Semiconductor Equipment — Why Here?"
+  }
+}

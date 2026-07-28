@@ -5,16 +5,20 @@
   "description": "Why Here? — An Atlas of Industrial Advantage. Evidence-based research instrument.",
   "type": "module",
   "scripts": {
+    "copy-map-worker": "node scripts/copy-maplibre-worker.mjs",
+    "predev": "npm run copy-map-worker",
     "dev": "next dev",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "validate-content": "node scripts/validate-content.ts",
-    "prebuild": "npm run validate-content",
+    "prebuild": "npm run validate-content && npm run copy-map-worker",
     "build": "next build"
   },
   "dependencies": {
+    "@fontsource-variable/dm-sans": "5.3.0",
+    "maplibre-gl": "6.0.0",
     "next": "16.2.11",
     "react": "19.2.8",
     "react-dom": "19.2.8",

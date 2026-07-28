@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { CaseResearchView } from '@/lib/researchViewModel';
 
 /**
@@ -14,6 +15,9 @@ export function ResearchHeader({ data }: { data: CaseResearchView }) {
           {data.country} × {data.industry}
         </h1>
         <span className="status-pill">{data.statusLabel}</span>
+        <Link className="atlas-open-link" href="/cases/netherlands-semiconductor-equipment/atlas">
+          Open interactive atlas →
+        </Link>
       </div>
 
       <p className="lead">{data.boundaryStatement}</p>
