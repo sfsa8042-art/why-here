@@ -878,3 +878,186 @@ p { margin: 0.5rem 0; }
   .ai-controls { margin-left: 0; width: 100%; }
   .ai-desc { display: none; }
 }
+
+/* ================================================================== *
+ * Explore preview (/atlas/<case>/explore-preview) — Public Atlas V2, Stage 3
+ * The ordinary-user "Visual story preview": a map spatial surface + a visual
+ * story rail of evidence-backed narrative chapters. UNLINKED, noindex, review
+ * only — never the public Explore. Ordinary language; no Claim/Source IDs, no
+ * snake_case, no raw epistemic enums surfaced by default.
+ * ================================================================== */
+
+.ep-shell {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; flex-direction: column;
+  background: var(--page); color: var(--text-body); font-family: var(--font);
+  overflow: hidden;
+}
+/* Neutralise the global `section { margin-top: 56px }` inside the fixed shell. */
+.ep-shell section { margin-top: 0; }
+
+.ep-topbar {
+  flex: 0 0 auto; height: 56px; display: flex; align-items: center; gap: 14px;
+  padding: 0 16px; border-bottom: 1px solid var(--border-subtle); background: var(--panel); overflow: hidden;
+}
+.ep-back { color: var(--text-muted); font-size: 13px; white-space: nowrap; }
+.ep-back:hover { color: var(--text-body); }
+.ep-wordmark { font-weight: 700; letter-spacing: 0.02em; color: var(--text-primary); font-size: 13px; }
+.ep-topbar .ep-title { font-weight: 600; color: var(--text-strong); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ep-preview-pill {
+  margin-left: auto; font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; white-space: nowrap;
+  padding: 4px 10px; border: 1px solid var(--signal); border-radius: var(--r-pill); color: var(--signal);
+}
+
+.ep-segmented { display: none; }
+
+.ep-body { position: relative; flex: 1 1 auto; display: grid; grid-template-columns: 1fr 460px; min-height: 0; }
+
+/* Spatial surface */
+.ep-stage { position: relative; min-height: 0; background: var(--page); overflow: hidden; }
+/* MapLibre adds `.maplibregl-map` (position:relative) to this same element, so
+ * explicit width/height (not just inset) are needed to fill the stage. */
+.ep-map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.ep-map-status, .ep-map-fallback {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 24px; text-align: center; color: var(--text-muted); background: var(--page);
+}
+.ep-map-fallback-reason { font-size: 13px; color: var(--text-body); }
+.ep-place-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ep-place-list li { font-size: 14px; color: var(--text-strong); }
+.ep-place-empty { font-size: 13px; color: var(--text-faint); }
+.ep-map-note {
+  position: absolute; left: 12px; bottom: 10px; right: 12px; margin: 0;
+  font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+.ep-marker { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.ep-marker-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--signal); border: 2px solid #fff; }
+.ep-marker-label { font-size: 11px; font-weight: 600; color: var(--text-primary); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.85); }
+
+/* Story rail */
+.ep-rail {
+  border-left: 1px solid var(--border-subtle); background: var(--panel);
+  padding: 20px 22px 40px; overflow-y: auto; min-height: 0;
+}
+.ep-progress { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.ep-progress-count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--text-muted); }
+.ep-support {
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+  padding: 4px 10px; border-radius: var(--r-pill); border: 1px solid var(--border-strong); color: var(--text-elevated);
+}
+.ep-support-supported { border-color: var(--border-strong); color: var(--text-primary); }
+.ep-support-partially_supported { border-style: dashed; color: var(--text-muted); }
+.ep-support-needs_research { border-color: var(--border-subtle); color: var(--text-faint); }
+
+.ep-period { margin: 14px 0 2px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--signal); }
+.ep-chapter-title { margin: 0 0 12px; font-size: 26px; line-height: 1.15; font-weight: 700; color: var(--text-primary); }
+.ep-what { margin: 0 0 18px; font-size: 15.5px; line-height: 1.6; color: var(--text-strong); }
+.ep-why { border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-bottom: 16px; }
+.ep-why-h { margin: 0 0 6px; font-size: 11px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--text-muted); }
+.ep-why p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--text-body); }
+
+.ep-boundary {
+  margin: 0 0 18px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; color: var(--text-body);
+  background: var(--raised); border: 1px solid var(--border-subtle); border-radius: var(--r-chip);
+}
+.ep-boundary-strong { border-left: 3px solid var(--signal); }
+.ep-boundary-label { display: block; font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+
+/* Contribution-to-question boundaries — compact two-row block */
+.ep-contrib { margin: 0 0 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ep-contrib-row { padding: 10px 12px; border: 1px solid var(--border-subtle); border-radius: var(--r-chip); background: var(--raised); }
+.ep-contrib-does { border-top: 2px solid var(--border-strong); }
+.ep-contrib-not { border-top: 2px solid var(--signal); }
+.ep-contrib dt { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.ep-contrib dd { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text-strong); }
+@media (max-width: 720px) { .ep-contrib { grid-template-columns: 1fr; } }
+
+/* Media figures */
+.ep-media { margin: 0 0 16px; display: flex; flex-direction: column; gap: 8px; }
+.ep-media-frame {
+  position: relative; overflow: hidden; border-radius: var(--r-card);
+  border: 1px solid var(--border-subtle); background: var(--raised);
+}
+.ep-media-frame img { display: block; width: 100%; height: auto; max-height: 300px; object-fit: contain; background: var(--panel); }
+.ep-media-badge {
+  position: absolute; left: 12px; bottom: 12px; font-size: 11px; letter-spacing: 0.04em;
+  padding: 5px 12px; border-radius: var(--r-pill);
+  background: rgba(14,16,18,0.85); border: 1px solid var(--border-strong); color: var(--text-elevated);
+}
+.ep-media-cap { display: flex; flex-direction: column; gap: 4px; }
+.ep-media-caption { font-size: 12.5px; line-height: 1.45; color: var(--text-muted); }
+.ep-media-credit { font-family: var(--mono); font-size: 10px; color: var(--text-faint); }
+.ep-media-details > summary { cursor: pointer; font-size: 11px; color: var(--text-muted); list-style: none; }
+.ep-media-details > summary::-webkit-details-marker { display: none; }
+.ep-media-details > summary::before { content: "\25B8  "; color: var(--text-faint); }
+.ep-media-details[open] > summary::before { content: "\25BE  "; }
+.ep-media-details dl { margin: 8px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
+.ep-media-details dt { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+.ep-media-details dd { margin: 0; font-size: 12px; line-height: 1.4; color: var(--text-muted); }
+.ep-media-details a { color: var(--text-body); }
+.ep-media-extra { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
+
+/* Actions + evidence disclosure */
+.ep-actions { margin-bottom: 8px; }
+.ep-evidence-btn {
+  cursor: pointer; min-height: 40px; padding: 8px 16px; font-size: 13px;
+  background: var(--raised); color: var(--text-body); border: 1px solid var(--border-strong); border-radius: var(--r-pill);
+}
+.ep-evidence-btn:hover { color: var(--text-primary); border-color: var(--signal); }
+.ep-evidence-btn:focus-visible, .ep-seg-btn:focus-visible, .ep-tl-item:focus-visible, .ep-back:focus-visible,
+.ep-evidence-link:focus-visible, .ep-media-details > summary:focus-visible {
+  outline: 2px solid var(--signal); outline-offset: 2px;
+}
+.ep-evidence {
+  margin: 12px 0 8px; padding: 14px; background: var(--raised);
+  border: 1px solid var(--border-subtle); border-radius: var(--r-chip);
+}
+.ep-evidence-lead { margin: 0 0 12px; font-size: 12.5px; color: var(--text-muted); }
+.ep-claim-list { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.ep-claim { border-left: 2px solid var(--border-strong); padding-left: 12px; }
+.ep-claim-statement { margin: 0 0 4px; font-size: 13.5px; line-height: 1.5; color: var(--text-strong); }
+.ep-claim-meta { margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.ep-claim-epi { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.ep-claim-src { font-family: var(--mono); font-size: 10.5px; line-height: 1.4; color: var(--text-faint); }
+.ep-evidence-limits { margin: 0 0 12px; font-size: 12.5px; line-height: 1.5; color: var(--text-body); }
+.ep-evidence-limits strong { color: var(--text-elevated); }
+.ep-evidence-link { color: var(--signal); font-weight: 600; font-size: 13px; }
+
+/* Compact chapter timeline */
+.ep-timeline { display: flex; flex-direction: column; gap: 6px; margin: 22px 0; border-top: 1px solid var(--border-subtle); padding-top: 16px; }
+.ep-tl-item {
+  cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px;
+  background: var(--raised); border: 1px solid var(--border-subtle); border-radius: var(--r-chip); color: var(--text-body);
+}
+.ep-tl-item:hover { border-color: var(--border-strong); }
+.ep-tl-item[aria-current="true"] { border-color: var(--signal); box-shadow: inset 2px 0 0 var(--signal); }
+.ep-tl-period { font-family: var(--mono); font-size: 10.5px; color: var(--text-muted); }
+.ep-tl-title { font-size: 13.5px; color: var(--text-strong); }
+
+/* Research gaps — honest frontier */
+.ep-gaps { border-top: 1px solid var(--border-subtle); padding-top: 16px; }
+.ep-gaps-h { margin: 0 0 6px; font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.ep-gaps-lead { margin: 0 0 12px; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+.ep-gaps-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ep-gap { display: flex; flex-direction: column; gap: 3px; padding-left: 12px; border-left: 2px solid var(--border-subtle); }
+.ep-gap-title { font-size: 13.5px; font-weight: 600; color: var(--text-strong); }
+.ep-gap-q { font-size: 12.5px; line-height: 1.5; color: var(--text-muted); }
+
+/* Mobile: story-first, map as a secondary pane */
+@media (max-width: 720px) {
+  .ep-segmented { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); background: var(--panel); }
+  .ep-seg-btn {
+    flex: 1; cursor: pointer; min-height: 44px; border-radius: var(--r-chip);
+    background: var(--raised); border: 1px solid var(--border-subtle); color: var(--text-body); font-size: 13px;
+  }
+  .ep-seg-btn[aria-pressed="true"] { border-color: var(--signal); color: var(--text-primary); }
+  .ep-topbar { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 6px 12px; }
+  .ep-topbar .ep-title { flex-basis: 100%; white-space: normal; font-size: 13px; }
+  .ep-body { display: block; }
+  .ep-rail { border-left: 0; height: 100%; }
+  .ep-chapter-title { font-size: 22px; }
+  /* Story-first: the rail is the default pane; the map is secondary. */
+  .ep-shell[data-pane="story"] .ep-stage { display: none; }
+  .ep-shell[data-pane="map"] .ep-rail { display: none; }
+  .ep-shell[data-pane="map"] .ep-stage { position: absolute; inset: 0; top: 0; }
+}

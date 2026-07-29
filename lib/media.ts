@@ -352,3 +352,21 @@ export function evidenceContextImage(caseId: string): CoverView | null {
   if (!link) return null;
   return toCoverView(pack.assets.find((x) => x.id === link.mediaId));
 }
+
+/** A media view for an arbitrary asset id, with its evidential role + link limitation. */
+export interface MediaItemView extends CoverView {
+  role: MediaRole | null;
+  linkLimitations: string | null;
+}
+export function mediaViewById(caseId: string, mediaId: string): MediaItemView | null {
+  const pack = getCaseMedia(caseId);
+  const view = toCoverView(pack.assets.find((x) => x.id === mediaId && x.caseId === caseId));
+  if (!view) return null;
+  const link = pack.links.find((l) => l.mediaId === mediaId && l.caseId === caseId);
+  return { ...view, role: link?.role ?? null, linkLimitations: link?.limitations ?? null };
+}
+/** Whether a media id resolves to a decorative-role link (may not support prose). */
+export function isDecorativeMedia(caseId: string, mediaId: string): boolean {
+  const pack = getCaseMedia(caseId);
+  return pack.links.some((l) => l.mediaId === mediaId && l.caseId === caseId && l.role === 'decorative');
+}

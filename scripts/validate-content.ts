@@ -18,6 +18,8 @@ import { loadCorpus } from '../lib/loadContent.ts';
 import { validateCorpus } from '../lib/validate.ts';
 import { validateMediaPack } from '../lib/media.ts';
 import { netherlandsMedia } from '../content/media/netherlands-semiconductor-equipment.media.ts';
+import { validateChapters } from '../lib/chapters.ts';
+import { netherlandsChapters } from '../content/chapters/netherlands-semiconductor-equipment.chapters.ts';
 
 const loaded = loadCorpus(productionRegistry);
 
@@ -50,6 +52,14 @@ if (mediaFailures.length > 0) {
   process.exit(1);
 }
 
+// Chapter pack (Stage 3) — validated against the loaded corpus + media, build-blocking.
+const chapterFailures = validateChapters(netherlandsChapters, corpus);
+if (chapterFailures.length > 0) {
+  for (const f of chapterFailures) console.error(`${f.ruleId} ${f.entityId}: ${f.message}`);
+  console.error(`validate-content: ${chapterFailures.length} chapter failure(s).`);
+  process.exit(1);
+}
+
 console.log('validate-content: OK — production corpus valid against schemas and V1-V20.');
 console.log(`  sources: ${corpus.sources.length}`);
 for (const module of corpus.modules) {
@@ -69,4 +79,8 @@ const publicMedia = netherlandsMedia.assets.filter((a) => a.rights.permittedForP
 console.log(
   `  media netherlands-semiconductor-equipment: ` +
   `${netherlandsMedia.assets.length} asset(s) (${publicMedia} public), ${netherlandsMedia.links.length} link(s)`,
+);
+console.log(
+  `  chapters netherlands-semiconductor-equipment: ` +
+  `${netherlandsChapters.chapters.length} chapter(s), ${netherlandsChapters.researchGaps.length} research gap(s)`,
 );
