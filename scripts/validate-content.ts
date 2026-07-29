@@ -16,6 +16,8 @@
 import { productionRegistry } from '../content/index.ts';
 import { loadCorpus } from '../lib/loadContent.ts';
 import { validateCorpus } from '../lib/validate.ts';
+import { validateMediaPack } from '../lib/media.ts';
+import { netherlandsMedia } from '../content/media/netherlands-semiconductor-equipment.media.ts';
 
 const loaded = loadCorpus(productionRegistry);
 
@@ -39,6 +41,15 @@ if (validationFailures.length > 0) {
 }
 
 const { corpus } = loaded;
+
+// Media pack (Stage 2) — validated against the loaded corpus, build-blocking.
+const mediaFailures = validateMediaPack(netherlandsMedia, corpus);
+if (mediaFailures.length > 0) {
+  for (const f of mediaFailures) console.error(`${f.ruleId} ${f.entityId}: ${f.message}`);
+  console.error(`validate-content: ${mediaFailures.length} media failure(s).`);
+  process.exit(1);
+}
+
 console.log('validate-content: OK — production corpus valid against schemas and V1-V20.');
 console.log(`  sources: ${corpus.sources.length}`);
 for (const module of corpus.modules) {
@@ -54,3 +65,8 @@ for (const module of corpus.modules) {
     `${(module.claimPlaceLinks ?? []).length} place-link(s)`,
   );
 }
+const publicMedia = netherlandsMedia.assets.filter((a) => a.rights.permittedForPublicWebsite).length;
+console.log(
+  `  media netherlands-semiconductor-equipment: ` +
+  `${netherlandsMedia.assets.length} asset(s) (${publicMedia} public), ${netherlandsMedia.links.length} link(s)`,
+);

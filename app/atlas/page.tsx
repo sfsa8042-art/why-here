@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getAtlasCases } from '@/lib/atlasCases';
+import { caseCover, type CoverView } from '@/lib/media';
 import { AtlasIndexShell } from '@/components/atlasindex/AtlasIndexShell.tsx';
 
 export const metadata: Metadata = {
@@ -15,5 +16,11 @@ export const metadata: Metadata = {
  */
 export default function AtlasIndexPage() {
   const cases = [...getAtlasCases()];
-  return <AtlasIndexShell cases={cases} />;
+  // Public cover images, keyed by case slug (only cases past the media gate).
+  const covers: Record<string, CoverView> = {};
+  for (const c of cases) {
+    const cover = caseCover(c.slug);
+    if (cover !== null) covers[c.slug] = cover;
+  }
+  return <AtlasIndexShell cases={cases} covers={covers} />;
 }

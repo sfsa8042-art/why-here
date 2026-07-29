@@ -819,6 +819,41 @@ p { margin: 0.5rem 0; }
 .aip-btn-secondary:hover { border-color: var(--signal); color: var(--text-primary); }
 .aip-nav { margin: 0; font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); }
 
+/* Case preview cover media (Stage 2) — local, licence-cleared, credited */
+.aip-media { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.aip-media-frame {
+  position: relative; aspect-ratio: 16 / 9; overflow: hidden;
+  border-radius: var(--r-chip); border: 1px solid var(--border-subtle); background: var(--raised);
+}
+.aip-media-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.aip-media-badge {
+  position: absolute; left: 8px; bottom: 8px;
+  font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: var(--r-pill);
+  background: rgba(14, 16, 18, 0.82); border: 1px solid var(--border-strong); color: var(--text-elevated);
+}
+.aip-media-cap { display: flex; flex-direction: column; gap: 3px; }
+.aip-media-caption { font-size: 12px; line-height: 1.4; color: var(--text-muted); }
+.aip-media-credit { font-family: var(--mono); font-size: 10px; color: var(--text-faint); }
+.aip-media-credit a { color: var(--text-muted); }
+
+/* Evidence-header contextual media (Stage 2) — present-day context, credited */
+.evidence-context-media { margin: 0 0 8px; display: flex; flex-direction: column; gap: 8px; }
+.ecm-frame {
+  position: relative; aspect-ratio: 21 / 7; max-height: 320px; overflow: hidden;
+  border-radius: var(--r-card); border: 1px solid var(--border-subtle); background: var(--panel);
+}
+.ecm-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ecm-badge {
+  position: absolute; left: 12px; bottom: 12px;
+  font-size: 11px; letter-spacing: 0.04em; padding: 5px 12px; border-radius: var(--r-pill);
+  background: rgba(14, 16, 18, 0.85); border: 1px solid var(--border-strong); color: var(--text-elevated);
+}
+.ecm-cap { display: flex; flex-direction: column; gap: 3px; }
+.ecm-caption { font-size: 13px; line-height: 1.45; color: var(--text-muted); }
+.ecm-credit { font-family: var(--mono); font-size: 11px; color: var(--text-faint); }
+.ecm-credit a { color: var(--text-muted); }
+
 /* Navigation markers on the world map */
 .atlas-nav-marker { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0; background: none; border: none; cursor: pointer; }
 .anm-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--text-muted); background: transparent; }

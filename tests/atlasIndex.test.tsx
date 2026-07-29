@@ -95,11 +95,13 @@ describe('Atlas index — /atlas shell', () => {
 });
 
 describe('Canonical routes', () => {
-  it('the Evidence route reuses the research view (all 17 Claims)', () => {
+  it('the Evidence route reuses the research view (all 17 Claims) + labelled contextual media', () => {
     const routeHtml = renderToStaticMarkup(<EvidencePage />);
     const direct = renderToStaticMarkup(<CaseResearchView data={buildNetherlandsResearchView('netherlands-semiconductor-equipment')} />);
-    expect(routeHtml).toBe(direct);
-    expect(routeHtml).toContain('17'); // claim count is surfaced in the header
+    expect(routeHtml).toContain(direct); // research view reused verbatim (17 Claims)
+    expect(routeHtml).toContain('17');
+    expect(routeHtml).toContain('evidence-context-media'); // contextual image present
+    expect(routeHtml).toContain('Present-day context'); // clearly labelled, not the founding
   });
 
   it('the prototype route reuses the M1 atlas, labelled "Research map prototype", not Explore', () => {

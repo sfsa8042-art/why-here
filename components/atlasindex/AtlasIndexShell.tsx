@@ -32,6 +32,7 @@ import {
   type StatusFilterValue,
 } from '@/lib/atlasCases';
 import { mapIsFatal, nextMapPhase, type MapEvent, type MapPhase } from '@/lib/mapStatus';
+import type { CoverView } from '@/lib/media';
 import { IndustryGlyph } from './IndustryGlyph.tsx';
 
 const AtlasIndexMap = dynamic(() => import('./AtlasIndexMap.tsx'), {
@@ -55,7 +56,7 @@ const STATUS_LABEL: Record<AtlasCaseStatus, string> = {
   planned: 'Planned research',
 };
 
-export function AtlasIndexShell({ cases }: { cases: AtlasCase[] }) {
+export function AtlasIndexShell({ cases, covers = {} }: { cases: AtlasCase[]; covers?: Record<string, CoverView> }) {
   const reducer = (s: AtlasIndexState, a: AtlasIndexAction): AtlasIndexState => atlasIndexReducer(cases, s, a);
   const [state, dispatch] = useReducer(reducer, initialAtlasIndexState(cases[0]?.id ?? null));
   const [mapPhase, setMapPhase] = useState<MapPhase>('initializing');
@@ -148,7 +149,7 @@ export function AtlasIndexShell({ cases }: { cases: AtlasCase[] }) {
             )}
           </ul>
 
-          <CasePreview selected={selected} />
+          <CasePreview selected={selected} cover={selected ? covers[selected.slug] ?? null : null} />
         </section>
 
         <div className="ai-stage">
@@ -179,7 +180,7 @@ export function AtlasIndexShell({ cases }: { cases: AtlasCase[] }) {
   );
 }
 
-function CasePreview({ selected }: { selected: AtlasCase | null }) {
+function CasePreview({ selected, cover }: { selected: AtlasCase | null; cover: CoverView | null }) {
   if (selected === null) {
     return (
       <div className="ai-preview ai-preview-empty" aria-live="polite">
@@ -200,6 +201,26 @@ function CasePreview({ selected }: { selected: AtlasCase | null }) {
 
   return (
     <div className="ai-preview" aria-live="polite">
+      {cover !== null && (
+        <figure className="aip-media">
+          <div className="aip-media-frame">
+            {/* Local, licence-cleared, self-hosted asset; explicit dimensions avoid layout shift. */}
+            <img src={cover.src} alt={cover.alt} width={cover.width} height={cover.height} loading="lazy" decoding="async" />
+            <span className="aip-media-badge">{cover.temporalLabel}</span>
+          </div>
+          <figcaption className="aip-media-cap">
+            <span className="aip-media-caption">{cover.caption}</span>
+            <span className="aip-media-credit">
+              {cover.credit}
+              {cover.licenseUrl !== null && (
+                <> · <a href={cover.licenseUrl} target="_blank" rel="noreferrer">licence</a></>
+              )}
+              {' · '}
+              <a href={cover.sourceUrl} target="_blank" rel="noreferrer">source</a>
+            </span>
+          </figcaption>
+        </figure>
+      )}
       <div className="ai-preview-head">
         <IndustryGlyph industry={selected.industry} large />
         <div>
