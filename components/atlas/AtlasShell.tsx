@@ -35,7 +35,7 @@ const AtlasMap = dynamic(() => import('./AtlasMap.tsx'), {
 
 type MobilePane = 'map' | 'timeline' | 'evidence';
 
-export function AtlasShell({ data }: { data: AtlasViewModel }) {
+export function AtlasShell({ data, prototypeBadge = false }: { data: AtlasViewModel; prototypeBadge?: boolean }) {
   const [state, dispatch] = useReducer(atlasReducer, initialAtlasState);
   const [mapPhase, setMapPhase] = useState<MapPhase>('initializing');
   const [mapReason, setMapReason] = useState<string | null>(null);
@@ -119,6 +119,7 @@ export function AtlasShell({ data }: { data: AtlasViewModel }) {
         <span className="atlas-wordmark">WHY HERE?</span>
         <span className="atlas-case">{data.country} × {data.industry}</span>
         <span className="atlas-status-pill">{data.statusLabel}</span>
+        {prototypeBadge && <span className="atlas-proto-pill">Research map prototype</span>}
         <span className="atlas-anchors">{data.anchorCount} verified geographic anchors</span>
         <Link className="atlas-evidence-link" href="/cases/netherlands-semiconductor-equipment">
           Complete evidence view →

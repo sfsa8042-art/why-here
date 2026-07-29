@@ -685,3 +685,161 @@ p { margin: 0.5rem 0; }
     scroll-behavior: auto !important;
   }
 }
+
+/* ================================================================== *
+ * Atlas index (/atlas) — Public Atlas V2, Stage 1
+ * A full-screen geographic discovery surface. World map + case list +
+ * public preview. Ordinary-user language, restrained Signal Blue.
+ * ================================================================== */
+
+.atlas-index {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+  color: var(--text-body);
+  overflow: hidden;
+}
+
+.ai-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--panel);
+}
+.ai-brand { display: flex; flex-direction: column; gap: 2px; }
+.ai-wordmark { font-weight: 700; letter-spacing: 0.02em; color: var(--text-primary); font-size: 15px; }
+.ai-tagline { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); }
+.ai-desc { margin: 4px 0 0; font-size: 13px; color: var(--text-muted); max-width: 42ch; }
+
+.ai-controls { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ai-count { font-family: var(--mono); font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.ai-filter { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.ai-chip {
+  min-height: 36px; padding: 6px 12px; cursor: pointer;
+  border: 1px solid var(--border-subtle); border-radius: var(--r-pill);
+  background: var(--raised); color: var(--text-body); font-size: 13px;
+}
+.ai-chip:hover { border-color: var(--border-strong); }
+.ai-chip[aria-pressed="true"] { border-color: var(--signal); color: var(--text-primary); }
+.ai-industry { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.ai-industry select {
+  min-height: 36px; padding: 6px 10px; cursor: pointer;
+  background: var(--raised); color: var(--text-body);
+  border: 1px solid var(--border-subtle); border-radius: var(--r-input); font-size: 13px;
+}
+.ai-reset {
+  min-height: 36px; padding: 6px 12px; cursor: pointer;
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--border-subtle); border-radius: var(--r-pill); font-size: 13px;
+}
+.ai-reset:hover { color: var(--text-body); border-color: var(--border-strong); }
+.ai-chip:focus-visible, .ai-industry select:focus-visible, .ai-reset:focus-visible,
+.ai-case-card:focus-visible, .aip-btn:focus-visible, .atlas-nav-marker:focus-visible, .ai-linkbtn:focus-visible {
+  outline: 2px solid var(--signal); outline-offset: 2px;
+}
+
+/* Body: desktop = map (left) + panel (right). DOM is panel-first for mobile. */
+.ai-body { flex: 1 1 auto; display: grid; grid-template-columns: 1fr 380px; min-height: 0; }
+.ai-stage { grid-column: 1; grid-row: 1; position: relative; overflow: hidden; background: var(--page); }
+.ai-panel {
+  grid-column: 2; grid-row: 1; min-height: 0; margin: 0;
+  border-left: 1px solid var(--border-subtle); background: var(--panel);
+  overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 16px;
+}
+
+.ai-map-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.ai-map-status {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: 20px; text-align: center; pointer-events: none;
+  color: var(--text-muted); font-family: var(--mono); font-size: 13px;
+}
+.ai-map-fallback {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 6px; padding: 24px; text-align: center;
+  color: var(--text-body);
+}
+.ai-map-fallback-sub { color: var(--text-muted); font-size: 13px; }
+.ai-legend {
+  position: absolute; left: 12px; right: auto; bottom: 10px; margin: 0; pointer-events: none;
+  max-width: min(62%, 680px);
+  font-family: var(--mono); font-size: 10.5px; line-height: 1.4; color: var(--text-faint);
+}
+
+/* Case list */
+.ai-case-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ai-case-card {
+  width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer;
+  background: var(--raised); border: 1px solid var(--border-subtle); border-radius: var(--r-chip);
+  padding: 12px; color: var(--text-body); min-height: 44px;
+}
+.ai-case-card:hover { border-color: var(--border-strong); }
+.ai-case-card[aria-pressed="true"] { border-color: var(--signal); box-shadow: inset 2px 0 0 var(--signal); }
+.ai-case-card[data-status="planned"] { border-style: dashed; opacity: 0.72; }
+.industry-glyph { flex: 0 0 auto; color: var(--text-muted); }
+.ai-case-card[aria-pressed="true"] .industry-glyph { color: var(--signal); }
+.acc-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.acc-country { color: var(--text-primary); font-weight: 600; font-size: 15px; }
+.acc-industry { color: var(--text-muted); font-size: 12px; }
+.acc-status { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-elevated); white-space: nowrap; }
+.acc-status[data-status="in_research"] { color: var(--signal); }
+.ai-empty { color: var(--text-muted); font-size: 13px; padding: 12px; }
+.ai-linkbtn { background: none; border: none; color: var(--signal); cursor: pointer; font: inherit; padding: 0; }
+
+/* Preview panel */
+.ai-preview { border-top: 1px solid var(--border-subtle); padding-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+.ai-preview-empty { color: var(--text-muted); font-size: 14px; }
+.ai-preview-head { display: flex; align-items: center; gap: 12px; }
+.industry-glyph-lg { color: var(--text-elevated); }
+.aip-country { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em; }
+.aip-industry { font-size: 13px; color: var(--text-muted); }
+.aip-status {
+  margin-left: auto; font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; white-space: nowrap;
+  padding: 4px 10px; border: 1px solid var(--border-strong); border-radius: var(--r-pill); color: var(--text-elevated);
+}
+.aip-status[data-status="in_research"] { color: var(--signal); border-color: var(--signal); }
+.aip-status[data-status="planned"] { border-style: dashed; }
+.aip-question { margin: 0; font-size: 17px; line-height: 1.35; font-weight: 600; color: var(--text-strong); }
+.aip-summary { margin: 0; font-size: 14px; color: var(--text-body); }
+.aip-planned-note, .aip-explore-note { margin: 0; font-size: 12.5px; color: var(--text-muted); font-style: italic; }
+.aip-cta { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
+.aip-btn {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
+  padding: 10px 14px; border-radius: var(--r-input); font-weight: 600; font-size: 14px; text-align: center;
+}
+.aip-btn-primary { background: var(--signal); color: #fff; }
+.aip-btn-primary:hover { background: var(--signal-deep); color: #fff; }
+.aip-btn-secondary { background: var(--raised); color: var(--text-strong); border: 1px solid var(--border-strong); }
+.aip-btn-secondary:hover { border-color: var(--signal); color: var(--text-primary); }
+.aip-nav { margin: 0; font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); }
+
+/* Navigation markers on the world map */
+.atlas-nav-marker { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0; background: none; border: none; cursor: pointer; }
+.anm-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--text-muted); background: transparent; }
+.atlas-nav-marker[data-status="in_research"] .anm-dot { background: var(--signal); border-color: #fff; }
+.atlas-nav-marker[data-status="planned"] .anm-dot { border-style: dashed; opacity: 0.85; }
+.atlas-nav-marker.is-selected .anm-dot { border-color: var(--signal); box-shadow: 0 0 0 4px rgba(0, 122, 252, 0.35); }
+.anm-label { font-size: 11px; font-weight: 600; color: var(--text-primary); white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
+
+/* Research-map-prototype badge (on the reused M1 atlas shell) */
+.atlas-proto-pill {
+  font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; white-space: nowrap;
+  padding: 4px 10px; border: 1px solid var(--signal); border-radius: var(--r-pill); color: var(--signal);
+}
+
+/* Mobile: list-first, smaller supporting map */
+@media (max-width: 720px) {
+  /* List-first: the body scrolls vertically through list → preview → smaller map. */
+  .ai-body { display: flex; flex-direction: column; overflow-y: auto; }
+  .ai-panel { border-left: 0; border-bottom: 1px solid var(--border-subtle); overflow-y: visible; flex: 0 0 auto; }
+  .ai-stage { flex: 0 0 44vh; min-height: 260px; }
+  .ai-header { align-items: flex-start; }
+  .ai-controls { margin-left: 0; width: 100%; }
+  .ai-desc { display: none; }
+}
