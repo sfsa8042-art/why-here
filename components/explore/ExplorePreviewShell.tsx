@@ -259,6 +259,7 @@ export function ExplorePreviewShell({ view, evidenceHref, heroImage }: { view: C
         <a href="#chapter-2" aria-label="Chapter 2: Crisis without a proven mechanism">2</a>
         <a href="#chapter-3" aria-label="Chapter 3: European coordination">3</a>
         <a href="#frontier">Open questions</a>
+        <Link className="ep-nav-evidence" href={evidenceHref}>Evidence →</Link>
       </nav>
 
       {/* Mobile: compact navigation — home, a section/progress control, and a menu. */}
@@ -276,6 +277,9 @@ export function ExplorePreviewShell({ view, evidenceHref, heroImage }: { view: C
                 <a href={`#${s.id}`} aria-current={i === activeIdx ? 'true' : undefined} onClick={() => setNavOpen(false)}>{s.label}</a>
               </li>
             ))}
+            <li className="ep-nav-sheet-evidence">
+              <Link href={evidenceHref} onClick={() => setNavOpen(false)}>Open the evidence record →</Link>
+            </li>
           </ul>
         )}
       </nav>
@@ -305,7 +309,7 @@ export function ExplorePreviewShell({ view, evidenceHref, heroImage }: { view: C
             {heroImage.title}{heroImage.creator !== null ? ` · ${heroImage.creator}` : ''}
           </p>
         )}
-        <p className="hero-status">Research in progress · internal preview</p>
+        <p className="hero-status">Research in progress</p>
       </header>
 
       {/* 2 — WHY THIS MATTERS / EXPLAINER */}

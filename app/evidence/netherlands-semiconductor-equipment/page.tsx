@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { buildNetherlandsResearchView } from '@/lib/researchViewModel';
 import { CaseResearchView } from '@/components/research/CaseResearchView.tsx';
 import { evidenceContextImage } from '@/lib/media';
@@ -8,18 +9,39 @@ const CASE_ID = 'netherlands-semiconductor-equipment';
 export const metadata: Metadata = {
   title: 'Netherlands × Semiconductor Equipment — Evidence — Why Here?',
   description:
-    'Evidence workspace: the sourced claims, citations, provenance and limitations behind the Netherlands semiconductor-equipment case.',
+    'The complete research record behind the Netherlands semiconductor-equipment visual story: documented findings, their sources and their limitations.',
 };
 
 /**
- * Canonical Evidence workspace route. Reuses the existing research view-model and
- * evidence components unchanged — no duplicated production-content loading.
+ * Canonical Evidence workspace route. A public-facing introduction explains what
+ * the reader is looking at BEFORE the professional research components begin; the
+ * existing detailed research UI is retained unchanged below it.
  */
 export default function NetherlandsEvidencePage() {
   const data = buildNetherlandsResearchView(CASE_ID);
   const cover = evidenceContextImage(CASE_ID);
   return (
     <>
+      <section className="evidence-intro" aria-label="What this is">
+        <p className="ev-intro-eyebrow">Evidence behind the story</p>
+        <h1 className="ev-intro-title">The complete research record</h1>
+        <p className="ev-intro-lead">
+          This is the professional research workspace behind the visual story — every
+          documented finding, the sources it rests on, and what the evidence does not yet
+          establish. The visual story is the plain-language reading of what is here.
+        </p>
+        <ul className="ev-intro-summary">
+          <li><span className="ev-intro-num">{data.claimCount}</span> documented findings</li>
+          <li><span className="ev-intro-num">{data.sourceCount}</span> sources</li>
+          <li><span className="ev-intro-num">{data.mappedAddressCount}</span> mapped organisation addresses</li>
+        </ul>
+        <div className="ev-intro-actions">
+          <Link className="ev-intro-btn ev-intro-btn-primary" href={`/atlas/${CASE_ID}`}>← Return to visual story</Link>
+          <a className="ev-intro-btn ev-intro-btn-secondary" href="#research-record">Browse full research record ↓</a>
+          <Link className="ev-intro-btn ev-intro-btn-quiet" href="/atlas">Back to the atlas</Link>
+        </div>
+      </section>
+
       {cover !== null && (
         <figure className="evidence-context-media">
           <div className="ecm-frame">
@@ -36,7 +58,9 @@ export default function NetherlandsEvidencePage() {
           </figcaption>
         </figure>
       )}
-      <CaseResearchView data={data} />
+      <div id="research-record" tabIndex={-1}>
+        <CaseResearchView data={data} />
+      </div>
     </>
   );
 }

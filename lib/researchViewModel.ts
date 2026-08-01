@@ -101,6 +101,8 @@ export interface CaseResearchView {
   researchQuestions: ResearchQuestionView[];
   sourceCount: number;
   claimCount: number;
+  /** Count of mapped organisation addresses (ClaimPlaceLinks) — for the public summary. */
+  mappedAddressCount: number;
   /** Always false for a research case; surfaced so the UI can assert it. */
   hasThesis: boolean;
   spine: SpineClaimView[];
@@ -337,6 +339,7 @@ export function buildNetherlandsResearchView(
     })),
     sourceCount: result.corpus.sources.length,
     claimCount: module.claims.length,
+    mappedAddressCount: (module.claimPlaceLinks ?? []).length,
     hasThesis: 'thesisClaimId' in caseEntity,
     spine,
     phases,

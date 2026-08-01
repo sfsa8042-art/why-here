@@ -46,7 +46,10 @@ export const atlasCases: AtlasCase[] = [
       source: NAV_SOURCE,
       attributionText: NAV_ATTRIBUTION,
     },
-    availableModes: ['evidence'],
+    // Public Explore launched (Stage 7): the reviewed visual documentary exists,
+    // its prose resolves to production Claims, and all rendered media pass the
+    // public rights gate — verified build-time by lib/exploreGate.ts.
+    availableModes: ['explore', 'evidence'],
   },
   {
     id: 'case-taiwan-semiconductor-manufacturing',
@@ -55,10 +58,10 @@ export const atlasCases: AtlasCase[] = [
     industry: 'Semiconductor manufacturing',
     title: 'Taiwan × Semiconductor Manufacturing',
     shortQuestion:
-      "Why did Taiwan become the world's leading semiconductor manufacturing hub?",
+      'How did Taiwan develop its semiconductor manufacturing industry?',
     summary:
-      'Planned research into how Taiwan built a dominant position in semiconductor ' +
-      'manufacturing. No evidence has been gathered yet.',
+      'Planned research into the firms, institutions and industrial conditions that ' +
+      "shaped Taiwan's semiconductor manufacturing sector.",
     status: 'planned',
     navigationGeometry: {
       type: 'point',
@@ -77,10 +80,10 @@ export const atlasCases: AtlasCase[] = [
     industry: 'Luxury',
     title: 'France × Luxury',
     shortQuestion:
-      'Why did France build an enduring advantage in luxury industries?',
+      'How did France develop its modern luxury industry?',
     summary:
-      "Planned research into the roots of France's lasting advantage in luxury " +
-      'goods. No evidence has been gathered yet.',
+      'Planned research into the firms, institutions and cultural systems that ' +
+      "shaped France's luxury sector.",
     status: 'planned',
     navigationGeometry: {
       type: 'point',

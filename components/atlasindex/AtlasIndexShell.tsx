@@ -56,7 +56,14 @@ const STATUS_LABEL: Record<AtlasCaseStatus, string> = {
   planned: 'Planned research',
 };
 
-export function AtlasIndexShell({ cases, covers = {} }: { cases: AtlasCase[]; covers?: Record<string, CoverView> }) {
+/** Editorial preview copy for an Explore-capable case (server-provided). */
+export interface StoryPreview { setupLine: string; beats: string[]; compactSummary?: string }
+
+export function AtlasIndexShell({
+  cases, covers = {}, storyPreviews = {},
+}: {
+  cases: AtlasCase[]; covers?: Record<string, CoverView>; storyPreviews?: Record<string, StoryPreview>;
+}) {
   const reducer = (s: AtlasIndexState, a: AtlasIndexAction): AtlasIndexState => atlasIndexReducer(cases, s, a);
   const [state, dispatch] = useReducer(reducer, initialAtlasIndexState(cases[0]?.id ?? null));
   const [mapPhase, setMapPhase] = useState<MapPhase>('initializing');
@@ -149,7 +156,11 @@ export function AtlasIndexShell({ cases, covers = {} }: { cases: AtlasCase[]; co
             )}
           </ul>
 
-          <CasePreview selected={selected} cover={selected ? covers[selected.slug] ?? null : null} />
+          <CasePreview
+            selected={selected}
+            cover={selected ? covers[selected.slug] ?? null : null}
+            story={selected ? storyPreviews[selected.slug] ?? null : null}
+          />
         </section>
 
         <div className="ai-stage">
@@ -180,7 +191,7 @@ export function AtlasIndexShell({ cases, covers = {} }: { cases: AtlasCase[]; co
   );
 }
 
-function CasePreview({ selected, cover }: { selected: AtlasCase | null; cover: CoverView | null }) {
+function CasePreview({ selected, cover, story }: { selected: AtlasCase | null; cover: CoverView | null; story: StoryPreview | null }) {
   if (selected === null) {
     return (
       <div className="ai-preview ai-preview-empty" aria-live="polite">
@@ -193,66 +204,79 @@ function CasePreview({ selected, cover }: { selected: AtlasCase | null; cover: C
   const evidence = hasEvidenceCta(selected);
   const explore = hasExploreCta(selected);
   const prototype = PROTOTYPE_SLUGS.has(selected.slug);
-  // Plain-language map-focus label (the raw navigation role stays in the data,
-  // never shown to ordinary users). Region → "Regional focus", else "Map focus".
   const navLabel = selected.region
     ? `Regional focus · ${selected.region.replace(/\s*\/\s*/g, ' ')}`
     : `Map focus · ${selected.country}`;
 
   return (
-    <div className="ai-preview" aria-live="polite">
+    <div className={`ai-preview${explore ? ' ai-preview-explore' : ''}`} aria-live="polite">
       {cover !== null && (
         <figure className="aip-media">
           <div className="aip-media-frame">
             {/* Local, licence-cleared, self-hosted asset; explicit dimensions avoid layout shift. */}
             <img src={cover.src} alt={cover.alt} width={cover.width} height={cover.height} loading="lazy" decoding="async" />
-            <span className="aip-media-badge">{cover.temporalLabel}</span>
+            <span className="aip-media-badge">{cover.presentationLabel}</span>
           </div>
           <figcaption className="aip-media-cap">
-            <span className="aip-media-caption">{cover.caption}</span>
-            <span className="aip-media-credit">
-              {cover.credit}
-              {cover.licenseUrl !== null && (
-                <> · <a href={cover.licenseUrl} target="_blank" rel="noreferrer">licence</a></>
-              )}
-              {' · '}
-              <a href={cover.sourceUrl} target="_blank" rel="noreferrer">source</a>
-            </span>
+            <span className="aip-media-caption">{cover.title}{cover.creator !== null ? ` · ${cover.creator}` : ''}</span>
           </figcaption>
         </figure>
       )}
+
       <div className="ai-preview-head">
-        <IndustryGlyph industry={selected.industry} large />
-        <div>
-          <div className="aip-country">{selected.country}</div>
-          <div className="aip-industry">{selected.industry}</div>
-        </div>
+        <span className="aip-place">{selected.country}<span className="aip-place-sep"> · </span>{selected.industry}</span>
         <span className="aip-status" data-status={selected.status}>{STATUS_LABEL[selected.status]}</span>
       </div>
 
       <p className="aip-question">{selected.shortQuestion}</p>
 
-      {planned ? (
+      {planned && (
         <>
           <p className="aip-summary">{selected.summary}</p>
           <p className="aip-planned-note">Research planned. No evidence has been gathered yet.</p>
         </>
-      ) : (
+      )}
+
+      {explore && (
+        <>
+          {/* Order (release-blocker fix): question (above) → setup → primary CTA →
+              secondary CTA → distinction → story beats → quiet research-map link,
+              so the primary Explore CTA is above the fold on desktop and early on mobile. */}
+          {story !== null && <p className="aip-setup">{story.setupLine}</p>}
+          <div className="aip-cta">
+            <Link className="aip-btn aip-btn-primary" href={`/atlas/${selected.slug}`}>Explore story →</Link>
+            {evidence && <Link className="aip-btn aip-btn-secondary" href={`/evidence/${selected.slug}`}>View evidence →</Link>}
+          </div>
+          <dl className="aip-modes">
+            <dt>Explore</dt><dd>A visual, plain-language story based on the current evidence.</dd>
+            {evidence && (<><dt>Evidence</dt><dd>The complete research record, claims, sources and limitations.</dd></>)}
+          </dl>
+          {story !== null && (
+            <>
+              <ol className="aip-beats" aria-label="Story chapters">
+                {story.beats.map((b, i) => (
+                  <li key={i} className="aip-beat"><span className="aip-beat-n">{i + 1}</span>{b}</li>
+                ))}
+              </ol>
+              {story.compactSummary !== undefined && (
+                <p className="aip-beats-compact">{story.compactSummary}</p>
+              )}
+            </>
+          )}
+          {prototype && (
+            <p className="aip-quietlink">
+              <Link href={`/atlas/${selected.slug}/prototype`}>Research map (technical prototype)</Link>
+            </p>
+          )}
+        </>
+      )}
+
+      {!planned && !explore && (
         <>
           <p className="aip-summary">{selected.summary}</p>
-          {!explore && (
-            <p className="aip-explore-note">A public visual story for this case is still being developed.</p>
-          )}
+          <p className="aip-explore-note">A public visual story for this case is still being developed.</p>
           <div className="aip-cta">
-            {explore && (
-              <Link className="aip-btn aip-btn-primary" href={`/atlas/${selected.slug}`}>Explore case →</Link>
-            )}
-            {evidence && (
-              <Link className="aip-btn aip-btn-primary" href={`/evidence/${selected.slug}`}>View evidence →</Link>
-            )}
-            {prototype && (
-              <Link className="aip-btn aip-btn-secondary" href={`/atlas/${selected.slug}/prototype`}>Open research map prototype →</Link>
-            )}
+            {evidence && <Link className="aip-btn aip-btn-primary" href={`/evidence/${selected.slug}`}>View evidence →</Link>}
           </div>
         </>
       )}

@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
         destination: '/evidence/netherlands-semiconductor-equipment',
         permanent: true,
       },
+      // Stage 7: the review preview is now the canonical public Explore route.
+      // Permanent (308) redirect; Next preserves query strings automatically, and
+      // there is no loop (source ≠ destination). Old bookmarks keep working.
+      {
+        source: '/atlas/netherlands-semiconductor-equipment/explore-preview',
+        destination: '/atlas/netherlands-semiconductor-equipment',
+        permanent: true,
+      },
     ];
   },
 };

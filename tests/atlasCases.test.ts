@@ -41,12 +41,12 @@ describe('AtlasCase registry — content', () => {
     expect(new Set(cases.map((c) => c.slug)).size).toBe(3);
   });
 
-  it('Netherlands is in_research with availableModes exactly ["evidence"]', () => {
+  it('Netherlands is in_research with Explore launched (availableModes exactly ["explore", "evidence"])', () => {
     const nl = bySlug('netherlands-semiconductor-equipment');
     expect(nl.status).toBe('in_research');
-    expect(nl.availableModes).toEqual(['evidence']);
+    expect(nl.availableModes).toEqual(['explore', 'evidence']);
     expect(hasEvidenceCta(nl)).toBe(true);
-    expect(hasExploreCta(nl)).toBe(false);
+    expect(hasExploreCta(nl)).toBe(true);
   });
 
   it('Taiwan and France are planned with availableModes exactly []', () => {
@@ -65,8 +65,9 @@ describe('AtlasCase registry — content', () => {
     }
   });
 
-  it('no case exposes an Explore CTA in Stage 1', () => {
-    expect(cases.some(hasExploreCta)).toBe(false);
+  it('only the Netherlands exposes an Explore CTA; planned cases never do', () => {
+    const explorers = cases.filter(hasExploreCta).map((c) => c.slug);
+    expect(explorers).toEqual(['netherlands-semiconductor-equipment']);
   });
 });
 
@@ -112,9 +113,11 @@ describe('AtlasCase registry — validation (R-series)', () => {
     expect(validateAtlasRegistry([c]).length).toBeGreaterThan(0);
   });
 
-  it('rejects a Netherlands case that is not evidence-only', () => {
-    const nl = { ...base(), slug: 'netherlands-semiconductor-equipment', availableModes: ['explore' as const, 'evidence' as const] };
-    expect(ruleIds(validateAtlasRegistry([nl]))).toContain('R7-nl-evidence-only');
+  it('rejects a Netherlands case that is not exactly [explore, evidence]', () => {
+    const nl = { ...base(), slug: 'netherlands-semiconductor-equipment', availableModes: ['evidence' as const] };
+    expect(ruleIds(validateAtlasRegistry([nl]))).toContain('R7-nl-explore-evidence');
+    const ok = { ...base(), slug: 'netherlands-semiconductor-equipment', availableModes: ['explore' as const, 'evidence' as const] };
+    expect(ruleIds(validateAtlasRegistry([ok]))).not.toContain('R7-nl-explore-evidence');
   });
 });
 

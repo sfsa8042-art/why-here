@@ -872,11 +872,18 @@ p { margin: 0.5rem 0; }
 @media (max-width: 720px) {
   /* List-first: the body scrolls vertically through list → preview → smaller map. */
   .ai-body { display: flex; flex-direction: column; overflow-y: auto; }
-  .ai-panel { border-left: 0; border-bottom: 1px solid var(--border-subtle); overflow-y: visible; flex: 0 0 auto; }
+  .ai-panel { border-left: 0; border-bottom: 1px solid var(--border-subtle); overflow-y: visible; flex: 0 0 auto; gap: 10px; padding: 12px; }
   .ai-stage { flex: 0 0 44vh; min-height: 260px; }
-  .ai-header { align-items: flex-start; }
+  .ai-header { align-items: flex-start; padding: 10px 14px; }
   .ai-controls { margin-left: 0; width: 100%; }
   .ai-desc { display: none; }
+  /* Compact the surfaces ABOVE the Explore CTA so the primary action lands in
+     the first viewport at 390×844: shorter preview image + tighter case cards. */
+  .ai-case-list { gap: 6px; }
+  .ai-case-card { padding: 9px 12px; }
+  .acc-country { font-size: 14px; }
+  .acc-status { font-size: 10px; }
+  .ai-preview .aip-media-frame { aspect-ratio: auto; height: 148px; }
 }
 
 /* ================================================================== *
@@ -1303,3 +1310,71 @@ p { margin: 0.5rem 0; }
  * the person and the projection lens both read (no distortion, no layout shift;
  * source file and media record unchanged). */
 .ph-frame img[data-media-id="nl-media-asml-lens-engineer-2006"] { object-position: center 22%; }
+
+/* ================================================================== *
+ * Stage 7 — Public Explore launch + Atlas integration
+ * Editorial Netherlands preview, Explore-first CTA hierarchy, Explore↔Evidence
+ * navigation, and a public Evidence landing.
+ * ================================================================== */
+
+/* Atlas index — filters made lighter / less dominant (image + story lead) */
+.ai-chip { background: transparent; }
+.ai-chip[aria-pressed="true"] { background: var(--raised); }
+
+/* Editorial case preview */
+.ai-preview-explore .aip-media-frame { aspect-ratio: 16 / 10; }
+.aip-media-caption { color: var(--text-muted); }
+.ai-preview-head { justify-content: space-between; }
+.aip-place { font-size: 12.5px; color: var(--text-muted); }
+.aip-place-sep { color: var(--text-faint); }
+.aip-setup { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-body); }
+.aip-beats { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.aip-beat { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-strong); }
+.aip-beat-n { flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--signal); color: var(--signal); font-size: 11px; font-weight: 600; display: grid; place-items: center; }
+.aip-cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.aip-modes { margin: 10px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
+.aip-modes dt { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--signal); }
+.aip-modes dd { margin: 0; font-size: 12px; line-height: 1.4; color: var(--text-muted); }
+.aip-quietlink { margin: 8px 0 0; font-size: 12px; }
+.aip-quietlink a { color: var(--text-muted); }
+.aip-quietlink a:hover { color: var(--text-body); }
+
+/* Explore navigation — Evidence link */
+.ep-nav-evidence { color: var(--signal); font-weight: 600; }
+.ep-nav-evidence:hover { color: var(--signal); text-decoration: underline; }
+.ep-nav-sheet-evidence { border-top: 1px solid var(--border-subtle); margin-top: 4px; padding-top: 4px; }
+.ep-nav-sheet-evidence a { color: var(--signal); }
+
+/* Public Evidence landing */
+.evidence-intro { margin: 0 0 28px; padding: 0 0 24px; border-bottom: 1px solid var(--border-subtle); }
+.ev-intro-eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--signal); margin: 0 0 8px; }
+.ev-intro-title { font-size: clamp(24px, 4vw, 38px); font-weight: 700; color: var(--text-primary); margin: 0 0 14px; line-height: 1.12; }
+.ev-intro-lead { font-size: clamp(15px, 1.8vw, 18px); line-height: 1.6; color: var(--text-elevated); max-width: 66ch; margin: 0 0 22px; }
+.ev-intro-summary { list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-wrap: wrap; gap: 14px 30px; }
+.ev-intro-summary li { font-size: 14px; color: var(--text-body); display: flex; align-items: baseline; gap: 8px; }
+.ev-intro-num { font-size: 26px; font-weight: 700; color: var(--signal); line-height: 1; }
+.ev-intro-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.ev-intro-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 18px; border-radius: var(--r-pill); font-size: 14px; font-weight: 600; border: 1px solid transparent; }
+.ev-intro-btn-primary { background: var(--signal); color: #fff; }
+.ev-intro-btn-primary:hover { background: var(--signal-deep); color: #fff; }
+.ev-intro-btn-secondary { background: var(--raised); color: var(--text-strong); border-color: var(--border-strong); }
+.ev-intro-btn-secondary:hover { border-color: var(--signal); color: var(--text-primary); }
+.ev-intro-btn-quiet { background: transparent; color: var(--text-muted); border-color: var(--border-subtle); }
+.ev-intro-btn-quiet:hover { color: var(--text-body); border-color: var(--border-strong); }
+.ev-intro-btn:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+/* neutralise the global section top-margin at the very top of the evidence page */
+.evidence-intro:first-child { margin-top: 0; }
+
+@media (max-width: 720px) {
+  .ev-intro-summary { gap: 12px 22px; }
+  .ev-intro-actions { flex-direction: column; align-items: stretch; }
+  .ev-intro-btn { justify-content: center; }
+}
+
+/* Stage 7.2 — Atlas preview: full story beats on desktop, one-line compact
+ * summary on mobile (keeps the primary Explore CTA early in the viewport). */
+.aip-beats-compact { display: none; margin: 2px 0 0; font-size: 12.5px; color: var(--text-elevated); }
+@media (max-width: 720px) {
+  .aip-beats { display: none; }
+  .aip-beats-compact { display: block; }
+}

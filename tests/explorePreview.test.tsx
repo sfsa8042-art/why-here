@@ -17,7 +17,8 @@ import { buildChaptersView } from '@/lib/chapters';
 import { caseCover } from '@/lib/media';
 import { AtlasIndexShell } from '@/components/atlasindex/AtlasIndexShell.tsx';
 import { caseBySlug, getAtlasCases } from '@/lib/atlasCases';
-import PreviewPage, { metadata as previewMetadata } from '@/app/atlas/netherlands-semiconductor-equipment/explore-preview/page';
+import PublicExplorePage, { metadata as exploreMetadata } from '@/app/atlas/netherlands-semiconductor-equipment/page';
+import nextConfig from '@/next.config';
 
 const CASE = 'netherlands-semiconductor-equipment';
 const view = buildChaptersView(CASE);
@@ -32,8 +33,14 @@ describe('Explore documentary — hero', () => {
     expect(html).toContain('See what the evidence supports');
   });
 
-  it('shows a non-dominant research-status label', () => {
+  it('shows a non-dominant research-status label with no internal-preview language', () => {
     expect(html).toContain('Research in progress');
+    // release blocker: the public route must not carry internal-preview wording
+    expect(html).not.toContain('INTERNAL PREVIEW');
+    expect(html).not.toContain('internal preview');
+    const routeHtml = renderToStaticMarkup(<PublicExplorePage />);
+    expect(routeHtml).not.toContain('INTERNAL PREVIEW');
+    expect(routeHtml).not.toContain('internal preview');
   });
 });
 
@@ -187,6 +194,16 @@ describe('Explore documentary — evidence on demand', () => {
     expect(html).toContain(`/evidence/${CASE}`);
   });
 
+  it('the Explore navigation links to Evidence and back to the Atlas (no dead ends)', () => {
+    expect(html).toContain('Evidence →'); // desktop nav evidence link
+    expect(html).toMatch(/class="ep-nav-evidence" href="\/evidence\/netherlands-semiconductor-equipment"/);
+    expect(html).toMatch(/href="\/atlas"/); // return to atlas
+    expect(html).toContain('Research in progress'); // visible research status
+    // the mobile compact nav also carries an evidence link (rendered when opened)
+    const src = readFileSync(join(process.cwd(), 'components/explore/ExplorePreviewShell.tsx'), 'utf8');
+    expect(src).toContain('Open the evidence record →');
+  });
+
   it('never leaks Claim/Source IDs, enums, or provenance jargon by default', () => {
     for (const term of ['well_supported', 'epistemicStatus', 'subject_authored', 'ClaimPlaceLink', 'nl-f-', 'nl-cit-', 'nl-src-', 'temporalRelation']) {
       expect(html).not.toContain(term);
@@ -258,27 +275,43 @@ describe('Explore documentary — map info vs. attribution (no overlap)', () => 
   });
 });
 
-describe('Explore documentary — review route, not public Explore', () => {
-  it('the preview route is noindex and reuses the documentary shell', () => {
-    expect(previewMetadata.robots).toMatchObject({ index: false, follow: false });
-    const routeHtml = renderToStaticMarkup(<PreviewPage />);
+describe('Public Explore launch (Stage 7)', () => {
+  it('the canonical public route is INDEXABLE (no noindex) and reuses the documentary shell', () => {
+    // no robots noindex on the public route
+    expect((exploreMetadata as { robots?: unknown }).robots).toBeUndefined();
+    const routeHtml = renderToStaticMarkup(<PublicExplorePage />);
     expect(routeHtml).toContain('Why did advanced chip-making equipment take root here?');
   });
 
-  it('the Netherlands AtlasCase availableModes remains exactly ["evidence"]', () => {
+  it('the canonical route carries sharing metadata + a canonical URL + a local OG image', () => {
+    expect(exploreMetadata.title).toBe('Why Here? — Netherlands × Semiconductor Equipment');
+    expect(String(exploreMetadata.description)).toMatch(/visual investigation/i);
+    expect((exploreMetadata.alternates as { canonical?: string })?.canonical).toBe('/atlas/netherlands-semiconductor-equipment');
+    const og = exploreMetadata.openGraph as { images?: { url: string }[] };
+    expect(og.images?.[0]?.url).toBe('/media/netherlands-semiconductor-equipment/Binnenstad_Eindhoven.jpg');
+    expect(og.images?.[0]?.url.startsWith('http')).toBe(false); // local asset, not an external URL
+  });
+
+  it('the Netherlands AtlasCase modes are exactly ["explore", "evidence"]', () => {
     const nl = caseBySlug([...getAtlasCases()], CASE)!;
-    expect(nl.availableModes).toEqual(['evidence']);
+    expect(nl.availableModes).toEqual(['explore', 'evidence']);
   });
 
-  it('the Atlas index offers no Explore CTA and does not link the preview route', () => {
-    const indexHtml = renderToStaticMarkup(<AtlasIndexShell cases={[...getAtlasCases()]} />);
-    expect(indexHtml).not.toContain('Explore case');
-    expect(indexHtml).not.toContain('explore-preview');
+  it('Taiwan and France remain planned with no modes', () => {
+    for (const slug of ['taiwan-semiconductor-manufacturing', 'france-luxury']) {
+      const c = caseBySlug([...getAtlasCases()], slug)!;
+      expect(c.status).toBe('planned');
+      expect(c.availableModes).toEqual([]);
+    }
   });
 
-  it('the preview route source declares robots noindex (build-visible gate)', () => {
-    const src = readFileSync(join(process.cwd(), 'app/atlas/netherlands-semiconductor-equipment/explore-preview/page.tsx'), 'utf8');
-    expect(src).toMatch(/robots:\s*\{\s*index:\s*false/);
+  it('the preview route is a permanent redirect to the canonical route (query preserved, no loop)', async () => {
+    const redirects = await nextConfig.redirects!();
+    const r = redirects.find((x) => x.source === '/atlas/netherlands-semiconductor-equipment/explore-preview');
+    expect(r).toBeDefined();
+    expect(r!.destination).toBe('/atlas/netherlands-semiconductor-equipment');
+    expect(r!.permanent).toBe(true);
+    expect(r!.source).not.toBe(r!.destination); // no loop
   });
 });
 

@@ -8,8 +8,12 @@ import Link from 'next/link';
  */
 import '@fontsource-variable/dm-sans/wght.css';
 import './globals.css';
+import { siteOrigin } from '@/lib/siteOrigin';
 
 export const metadata: Metadata = {
+  // Absolute base for canonical URLs + Open Graph / Twitter images (Stage 7.1).
+  // Resolves NEXT_PUBLIC_SITE_URL → Vercel production domain → localhost.
+  metadataBase: new URL(siteOrigin()),
   title: 'Why Here? — An Atlas of Industrial Advantage',
   description:
     'An evidence-based research instrument for how industrial advantage forms across places and over time.',

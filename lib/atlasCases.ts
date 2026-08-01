@@ -62,8 +62,8 @@ export const AtlasCaseSchema = z.object({
 });
 export type AtlasCase = z.infer<typeof AtlasCaseSchema>;
 
-/** Stage-1 case whose availableModes must be exactly ['evidence']. */
-const STAGE1_EVIDENCE_ONLY_SLUG = 'netherlands-semiconductor-equipment';
+/** The launched public case (Stage 7): Explore + Evidence. */
+const LAUNCHED_EXPLORE_SLUG = 'netherlands-semiconductor-equipment';
 
 /* ------------------------------------------------------------------ *
  * Validation — R-series (build-blocking via getAtlasCases)
@@ -126,14 +126,19 @@ export function validateAtlasRegistry(input: unknown): AtlasRegistryFailure[] {
       failures.push({ ruleId: 'R6-no-dup-modes', caseId: c.id, message: 'duplicate availableModes entries' });
   }
 
-  // R7 — Netherlands Stage 1 has exactly ['evidence']
-  const nl = cases.find((c) => c.slug === STAGE1_EVIDENCE_ONLY_SLUG);
-  if (nl && !(nl.availableModes.length === 1 && nl.availableModes[0] === 'evidence'))
-    failures.push({
-      ruleId: 'R7-nl-evidence-only',
-      caseId: nl.id,
-      message: "Netherlands (Stage 1) must have availableModes exactly ['evidence']",
-    });
+  // R7 — the launched public case (Netherlands, Stage 7) exposes exactly
+  // ['explore', 'evidence']. The Explore GATE (supported chapters, prose→Claims,
+  // media rights) is enforced separately + build-blocking by lib/exploreGate.ts.
+  const nl = cases.find((c) => c.slug === LAUNCHED_EXPLORE_SLUG);
+  if (nl) {
+    const modes = [...nl.availableModes].sort().join(',');
+    if (modes !== 'evidence,explore')
+      failures.push({
+        ruleId: 'R7-nl-explore-evidence',
+        caseId: nl.id,
+        message: "Netherlands must have availableModes exactly ['explore', 'evidence']",
+      });
+  }
 
   return failures;
 }

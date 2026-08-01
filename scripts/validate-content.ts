@@ -20,6 +20,10 @@ import { validateMediaPack } from '../lib/media.ts';
 import { netherlandsMedia } from '../content/media/netherlands-semiconductor-equipment.media.ts';
 import { validateChapters } from '../lib/chapters.ts';
 import { netherlandsChapters } from '../content/chapters/netherlands-semiconductor-equipment.chapters.ts';
+import { getAtlasCases } from '../lib/atlasCases.ts';
+import { exploreGateFailures } from '../lib/exploreGate.ts';
+import { validateAtlasPreviews } from '../lib/atlasPreview.ts';
+import { atlasPreviews } from '../content/atlas/previews.ts';
 
 const loaded = loadCorpus(productionRegistry);
 
@@ -57,6 +61,24 @@ const chapterFailures = validateChapters(netherlandsChapters, corpus);
 if (chapterFailures.length > 0) {
   for (const f of chapterFailures) console.error(`${f.ruleId} ${f.entityId}: ${f.message}`);
   console.error(`validate-content: ${chapterFailures.length} chapter failure(s).`);
+  process.exit(1);
+}
+
+// Explore publication gate (Stage 7) — any case exposing `explore` must be backed
+// by supported chapters + public-renderable media, build-blocking.
+const exploreFailures = exploreGateFailures(getAtlasCases());
+if (exploreFailures.length > 0) {
+  for (const f of exploreFailures) console.error(`${f.ruleId} ${f.caseId}: ${f.message}`);
+  console.error(`validate-content: ${exploreFailures.length} explore-gate failure(s).`);
+  process.exit(1);
+}
+
+// Atlas story previews (Stage 7.1) — beats must link to real, in-case, non-fake
+// chapters in order, build-blocking.
+const previewFailures = validateAtlasPreviews(atlasPreviews);
+if (previewFailures.length > 0) {
+  for (const f of previewFailures) console.error(`${f.ruleId} ${f.slug}: ${f.message}`);
+  console.error(`validate-content: ${previewFailures.length} atlas-preview failure(s).`);
   process.exit(1);
 }
 
