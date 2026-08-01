@@ -19,6 +19,7 @@ import {
 import { netherlandsChapters } from '@/content/chapters/netherlands-semiconductor-equipment.chapters';
 import { loadCorpus } from '@/lib/loadContent';
 import { productionRegistry } from '@/content/index';
+import { buildNetherlandsResearchView } from '@/lib/researchViewModel';
 
 const loaded = loadCorpus(productionRegistry);
 if (!loaded.ok) throw new Error('corpus failed to load');
@@ -213,5 +214,69 @@ describe('Chapter loader + view-model', () => {
     expect(titles.some((t) => /deep-uv/i.test(t))).toBe(true);
     expect(titles.some((t) => /ipo/i.test(t))).toBe(true);
     for (const g of view.researchGaps) expect(g.question.length).toBeGreaterThan(20);
+  });
+});
+
+describe('Chapter view-model — Stage 4 documentary derivations', () => {
+  const view = buildChaptersView(CASE);
+
+  it('each chapter carries a plain-language evidence summary (findings + distinct sources)', () => {
+    expect(view.chapters.map((c) => c.evidenceSummary)).toEqual([
+      { findingCount: 5, sourceCount: 2 },
+      { findingCount: 5, sourceCount: 2 },
+      { findingCount: 4, sourceCount: 1 },
+    ]);
+  });
+
+  it('evidence sources carry a human "kind" label, never a raw enum', () => {
+    const kinds = new Set(view.chapters.flatMap((c) => c.evidence.flatMap((e) => e.sources.map((s) => s.kind))));
+    expect(kinds).toContain('Primary company record');
+    expect(kinds).toContain('European project record');
+    expect(kinds).toContain('Retrospective institutional history');
+    for (const k of kinds) expect(k).not.toMatch(/_/); // no snake_case enum leaked
+  });
+
+  it('a concise per-finding limitation appears only where material (attributed / record-reported)', () => {
+    const ch3 = view.chapters[2]!;
+    const reported = ch3.evidence.find((e) => /project record reports/i.test(e.statement));
+    expect(reported?.limitation).toBe('Reported by the project record, not independently replicated.');
+    // a plainly documented founding fact carries no manufactured caveat
+    expect(view.chapters[0]!.evidence[0]!.limitation).toBe(null);
+  });
+
+  it('Chapter 3 exposes the consortium network; only production-Place orgs are geographic', () => {
+    const ch3 = view.chapters[2]!;
+    expect(ch3.networkOrgs.find((o) => o.role === 'coordinator')?.name).toBe('ASM Lithography');
+    const mapped = ch3.networkOrgs.filter((o) => o.placeName !== null).map((o) => o.placeName).sort();
+    expect(mapped).toEqual(['Eindhoven', 'Veldhoven']);
+    // every foreign participant stays non-geographic (no fabricated coordinates)
+    for (const o of ch3.networkOrgs) {
+      if (!['ASM Lithography', 'Nederlandse Philips Bedrijven'].includes(o.name)) expect(o.placeName).toBe(null);
+    }
+    // other chapters carry no network
+    expect(view.chapters[0]!.networkOrgs).toEqual([]);
+  });
+
+  it('every consortium name is grounded in the production participants Claim (no invented members)', () => {
+    const research = buildNetherlandsResearchView(CASE);
+    const participants = research.spine.find((c) => c.id === 'nl-f-deepuv-participants')!.statement;
+    for (const org of view.chapters[2]!.networkOrgs) {
+      expect(participants).toContain(org.name);
+    }
+  });
+
+  it('the eight gaps group into exactly four ordered, non-empty themes', () => {
+    expect(view.researchThemes.map((t) => t.title)).toEqual([
+      'Regional ecosystem', 'Technology transfer', 'Markets and competition', 'Commercial transition',
+    ]);
+    expect(view.researchThemes.length).toBeLessThanOrEqual(4);
+    for (const t of view.researchThemes) expect(t.gaps.length).toBeGreaterThan(0);
+    expect(view.researchThemes.flatMap((t) => t.gaps).length).toBe(8);
+  });
+
+  it('rejects a research gap missing its theme', () => {
+    const badGaps = [{ title: 'x', question: 'y'.repeat(30) }];
+    const fs = validateChapters({ chapters: netherlandsChapters.chapters, researchGaps: badGaps }, corpus);
+    expect(fs.map((f) => f.ruleId)).toContain('C0-gaps-schema');
   });
 });

@@ -60,8 +60,27 @@ export const NarrativeChapterSchema = z.object({
 });
 export type NarrativeChapter = z.infer<typeof NarrativeChapterSchema>;
 
-export interface ResearchGap { title: string; question: string; }
+/** ≤4 reader-facing themes the eight research gaps are grouped under. */
+export const ResearchGapThemeSchema = z.enum([
+  'regional_ecosystem', 'technology_transfer', 'markets_and_competition', 'commercial_transition',
+]);
+export type ResearchGapTheme = z.infer<typeof ResearchGapThemeSchema>;
+
+export const ResearchGapSchema = z.object({
+  title: z.string().min(1),
+  question: z.string().min(1),
+  theme: ResearchGapThemeSchema,
+});
+export interface ResearchGap { title: string; question: string; theme: ResearchGapTheme; }
 export interface ChapterPack { chapters: NarrativeChapter[]; researchGaps: ResearchGap[]; }
+
+/** Ordered human titles for the gap themes (the story never shows the enum). */
+export const RESEARCH_THEME_ORDER: { theme: ResearchGapTheme; title: string }[] = [
+  { theme: 'regional_ecosystem', title: 'Regional ecosystem' },
+  { theme: 'technology_transfer', title: 'Technology transfer' },
+  { theme: 'markets_and_competition', title: 'Markets and competition' },
+  { theme: 'commercial_transition', title: 'Commercial transition' },
+];
 
 /* ------------------------------------------------------------------ *
  * Validation — C-series (build-blocking via getCaseChapters)
@@ -129,7 +148,7 @@ export function validateChapters(
   const failures: ChapterFailure[] = [];
 
   const parsed = z.array(NarrativeChapterSchema).safeParse(pack.chapters);
-  const gapsParsed = z.array(z.object({ title: z.string().min(1), question: z.string().min(1) })).safeParse(pack.researchGaps);
+  const gapsParsed = z.array(ResearchGapSchema).safeParse(pack.researchGaps);
   if (!parsed.success) {
     for (const i of parsed.error.issues) failures.push({ ruleId: 'C0-schema', entityId: String(i.path[0] ?? '?'), message: `${i.path.join('.')}: ${i.message}` });
   }
@@ -251,8 +270,18 @@ export function getCaseChapters(caseId: string): ChapterPack {
  * View-model (serializable, ordinary-user)
  * ------------------------------------------------------------------ */
 
-export interface ChapterClaimView { id: string; statement: string; epistemicLabel: string; sources: { title: string; locator: string }[]; }
+export interface ChapterClaimSource { title: string; locator: string; kind: string; }
+export interface ChapterClaimView {
+  id: string;
+  statement: string;
+  epistemicLabel: string;
+  sources: ChapterClaimSource[];
+  /** One concise, material limitation for this finding, or null. */
+  limitation: string | null;
+}
 export interface ChapterMapAnchor { placeId: string; name: string; longitude: number; latitude: number; }
+/** A consortium organisation for the Chapter-3 network visual (presentational). */
+export interface ChapterNetworkOrg { name: string; role: 'coordinator' | 'participant'; placeName: string | null; }
 export interface ChapterView {
   id: string;
   order: number;
@@ -269,8 +298,19 @@ export interface ChapterView {
   media: MediaItemView[];
   anchors: ChapterMapAnchor[];
   evidence: ChapterClaimView[];
+  /** Plain-language evidence header, e.g. "5 documented findings · 2 sources". */
+  evidenceSummary: { findingCount: number; sourceCount: number };
+  /** Consortium nodes for the Chapter-3 network visual (empty for other chapters). */
+  networkOrgs: ChapterNetworkOrg[];
 }
-export interface ChaptersView { caseId: string; chapters: ChapterView[]; researchGaps: ResearchGap[]; }
+export interface ResearchTheme { theme: ResearchGapTheme; title: string; gaps: ResearchGap[]; }
+export interface ChaptersView {
+  caseId: string;
+  chapters: ChapterView[];
+  researchGaps: ResearchGap[];
+  /** The gaps grouped under ≤4 reader-facing themes (ordered, empty themes dropped). */
+  researchThemes: ResearchTheme[];
+}
 
 function humanize(s: string): string { return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()); }
 const SUPPORT_LABEL: Record<ChapterSupport, string> = {
@@ -278,6 +318,33 @@ const SUPPORT_LABEL: Record<ChapterSupport, string> = {
   partially_supported: 'Partially supported',
   needs_research: 'Needs research',
 };
+
+/**
+ * Plain-language "kind" for a source, derived from its typed relationship — the
+ * story never shows raw sourceType/subjectRelationship enums.
+ */
+function sourceKindLabel(sourceType: string, subjectRelationship: string): string {
+  if (subjectRelationship === 'independent' && sourceType === 'documentary') return 'European project record';
+  if (subjectRelationship === 'subject_authored') return 'Primary company record';
+  return 'Retrospective institutional history';
+}
+
+/**
+ * The DEEP-UV consortium as a presentational node list for the Chapter-3 network
+ * visual. Every name is a substring of the production participants Claim
+ * (nl-f-deepuv-participants); `placeName` is non-null ONLY for the two
+ * organisations backed by a production Place — no geography is invented for the
+ * foreign participants, which stay a non-geographic list.
+ */
+const DEEPUV_CONSORTIUM: ChapterNetworkOrg[] = [
+  { name: 'ASM Lithography', role: 'coordinator', placeName: 'Veldhoven' },
+  { name: 'Nederlandse Philips Bedrijven', role: 'participant', placeName: 'Eindhoven' },
+  { name: 'Carl Zeiss', role: 'participant', placeName: null },
+  { name: 'Siemens', role: 'participant', placeName: null },
+  { name: 'Commissariat à l’Energie Atomique', role: 'participant', placeName: null },
+  { name: 'Fraunhofer Institut', role: 'participant', placeName: null },
+  { name: 'Hoechst', role: 'participant', placeName: null },
+];
 
 export function buildChaptersView(caseId: string): ChaptersView {
   const pack = getCaseChapters(caseId);
@@ -309,13 +376,24 @@ export function buildChaptersView(caseId: string): ChaptersView {
         .map((p) => ({ placeId: p.id, name: p.name, longitude: (p.geometry as { longitude: number }).longitude, latitude: (p.geometry as { latitude: number }).latitude }));
       const evidence: ChapterClaimView[] = ch.claimIds.map((cid) => {
         const c = spineById.get(cid);
+        const limitation = c?.attributed
+          ? 'The company’s own retrospective statement.'
+          : c !== undefined && /project record reports/i.test(c.statement)
+            ? 'Reported by the project record, not independently replicated.'
+            : null;
         return {
           id: cid,
           statement: c?.statement ?? cid,
           epistemicLabel: c ? humanize(c.epistemicStatus) : '',
-          sources: (c?.citations ?? []).map((ci) => ({ title: ci.sourceTitle, locator: `${ci.locatorKind}: ${ci.locatorValue}` })),
+          sources: (c?.citations ?? []).map((ci) => ({
+            title: ci.sourceTitle,
+            locator: `${ci.locatorKind}: ${ci.locatorValue}`,
+            kind: sourceKindLabel(ci.sourceType, ci.subjectRelationship),
+          })),
+          limitation,
         };
       });
+      const sourceTitles = new Set(evidence.flatMap((e) => e.sources.map((s) => s.title)));
       return {
         id: ch.id, order: ch.order, title: ch.title, periodLabel: ch.periodLabel,
         whatHappened: ch.whatHappened, whyItMatters: ch.whyItMatters,
@@ -323,8 +401,14 @@ export function buildChaptersView(caseId: string): ChaptersView {
         supportStatus: ch.supportStatus, supportLabel: SUPPORT_LABEL[ch.supportStatus],
         limitations: ch.limitations, readingTimeMinutes: ch.readingTimeMinutes,
         media, anchors, evidence,
+        evidenceSummary: { findingCount: ch.claimIds.length, sourceCount: sourceTitles.size },
+        networkOrgs: ch.id === 'nl-ch-european-coordination' ? DEEPUV_CONSORTIUM : [],
       };
     });
 
-  return { caseId, chapters, researchGaps: pack.researchGaps };
+  const researchThemes: ResearchTheme[] = RESEARCH_THEME_ORDER
+    .map(({ theme, title }) => ({ theme, title, gaps: pack.researchGaps.filter((g) => g.theme === theme) }))
+    .filter((t) => t.gaps.length > 0);
+
+  return { caseId, chapters, researchGaps: pack.researchGaps, researchThemes };
 }

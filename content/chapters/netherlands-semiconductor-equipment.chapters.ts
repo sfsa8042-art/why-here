@@ -57,7 +57,12 @@ export const netherlandsChapters: ChapterPack = {
         'nl-f-mip-non-participation',
       ],
       placeIds: [],
-      mediaIds: ['nl-media-eindhoven-city-2007'],
+      mediaIds: [
+        'nl-media-philips-fabrieken-1949',
+        'nl-media-klokgebouw-2014',
+        'nl-media-philips-strijp-1936',
+        'nl-media-eindhoven-city-2007',
+      ],
       supportStatus: 'supported',
       limitations:
         'The accompanying image is a present-day view of Eindhoven and sets ' +
@@ -112,7 +117,13 @@ export const netherlandsChapters: ChapterPack = {
         'nl-f-philips-stake-acquisition-1988',
       ],
       placeIds: [],
-      mediaIds: ['nl-media-step-repeat-diagram'],
+      mediaIds: [
+        'nl-media-microelectronics-1989',
+        'nl-media-cleanroom-2009',
+        'nl-media-silicon-wafer',
+        'nl-media-asml-lens-engineer-2006',
+        'nl-media-step-repeat-diagram',
+      ],
       supportStatus: 'partially_supported',
       limitations:
         'The evidence establishes the sequence of technical and financial events, ' +
@@ -164,6 +175,7 @@ export const netherlandsChapters: ChapterPack = {
       placeIds: ['nl-place-veldhoven', 'nl-place-eindhoven'],
       mediaIds: [
         'nl-media-asml-veldhoven-2008',
+        'nl-media-philips-terrein-2008',
         'nl-media-eindhoven-city-2007',
         'nl-media-step-repeat-diagram',
       ],
@@ -203,6 +215,7 @@ export const netherlandsChapters: ChapterPack = {
         'The evidence places the founding firms in the Eindhoven/Veldhoven area ' +
         'but does not establish why this region, rather than another, was where ' +
         'the venture took root.',
+      theme: 'regional_ecosystem',
     },
     {
       title: 'What did suppliers and local precision engineering contribute?',
@@ -210,42 +223,49 @@ export const netherlandsChapters: ChapterPack = {
         'The corpus records technical problems and their fixes, but not a ' +
         'documented account of how nearby suppliers or precision-engineering ' +
         'capability shaped the outcome.',
+      theme: 'regional_ecosystem',
     },
     {
       title: 'What role did universities and public research play?',
       question:
         'No production claim connects local universities or public research ' +
         'institutions to the venture’s technical development.',
+      theme: 'regional_ecosystem',
     },
     {
       title: 'Who were the early customers, and what was the demand?',
       question:
         'The evidence does not identify the venture’s early customers or ' +
         'characterise the demand its machines were meeting.',
+      theme: 'markets_and_competition',
     },
     {
       title: 'What were the competitors and the alternative locations?',
       question:
         'The corpus does not document the competing firms of the period or the ' +
         'locations where similar work could have been done instead.',
+      theme: 'markets_and_competition',
     },
     {
       title: 'Did DEEP-UV research transfer into the PAS 5500?',
       question:
         'The DEEP-UV project record and the PAS 5500 launch are both documented, ' +
         'but no source establishes a transfer of technology from one to the other.',
+      theme: 'technology_transfer',
     },
     {
       title: 'How did the PAS 5500 actually perform commercially?',
       question:
         'ASML states it launched the PAS 5500 in 1991, but the corpus holds no ' +
         'independent evidence of its sales, customers or commercial performance.',
+      theme: 'commercial_transition',
     },
     {
       title: 'What was the substance of the 1995 IPO?',
       question:
         'The public listing in 1995 is recorded, but offering terms, proceeds, ' +
         'valuation and the degree of independence from Philips are not evidenced.',
+      theme: 'commercial_transition',
     },
   ],
 };

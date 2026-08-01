@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { buildChaptersView } from '@/lib/chapters';
+import { caseCover } from '@/lib/media';
 import { ExplorePreviewShell } from '@/components/explore/ExplorePreviewShell.tsx';
 
 const CASE_ID = 'netherlands-semiconductor-equipment';
@@ -23,5 +24,5 @@ export const metadata: Metadata = {
 
 export default function NetherlandsExplorePreviewPage() {
   const view = buildChaptersView(CASE_ID);
-  return <ExplorePreviewShell view={view} evidenceHref={`/evidence/${CASE_ID}`} />;
+  return <ExplorePreviewShell view={view} evidenceHref={`/evidence/${CASE_ID}`} heroImage={caseCover(CASE_ID)} />;
 }

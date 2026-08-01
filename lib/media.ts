@@ -55,6 +55,28 @@ export function temporalLabel(ctx: MediaTemporalContext): string {
   }
 }
 
+/**
+ * Reader-facing presentation role — the honest, EXPLICIT badge each photograph
+ * carries so a present-day image can never imply it depicts a historical event.
+ * Distinct from the evidential `MediaRole` and the temporal context.
+ */
+export const MediaPresentationRoleSchema = z.enum([
+  'historical_photograph', 'present_day_regional', 'present_day_company',
+  'industrial_heritage', 'technology_illustration', 'archival_document',
+]);
+export type MediaPresentationRole = z.infer<typeof MediaPresentationRoleSchema>;
+
+export function presentationLabel(role: MediaPresentationRole): string {
+  switch (role) {
+    case 'historical_photograph': return 'Historical photograph';
+    case 'present_day_regional': return 'Present-day regional context';
+    case 'present_day_company': return 'Present-day company context';
+    case 'industrial_heritage': return 'Industrial heritage context';
+    case 'technology_illustration': return 'Technology illustration';
+    case 'archival_document': return 'Archival document';
+  }
+}
+
 export const MediaRightsSchema = z.object({
   status: MediaRightsStatusSchema,
   licenseName: z.string().min(1).nullable(),
@@ -86,6 +108,8 @@ export const MediaAssetSchema = z.object({
   height: z.number().int().positive().nullable(),
   /** Typed temporal context — drives historical UI labels. */
   temporalContext: MediaTemporalContextSchema,
+  /** Explicit reader-facing role badge (honest historical framing). */
+  presentationRole: MediaPresentationRoleSchema,
   /**
    * Set when the local file is a WEB DELIVERY DERIVATIVE (e.g. a downscaled copy)
    * rather than the untouched original. Records the transformation for provenance.
@@ -204,6 +228,14 @@ export function validateMediaPack(
     if (a.temporalContext === 'timeless_illustration' && a.type !== 'diagram') {
       failures.push({ ruleId: 'M20-timeless-type', entityId: a.id, message: "temporalContext 'timeless_illustration' requires a diagram-type asset" });
     }
+    // M23 — presentationRole must be temporally honest: a present-day photo may
+    // never wear a "Historical photograph" badge, and vice versa.
+    if (a.presentationRole === 'historical_photograph' && a.temporalContext !== 'historical') {
+      failures.push({ ruleId: 'M23-presentation-honest', entityId: a.id, message: `presentationRole 'historical_photograph' requires temporalContext 'historical' (got '${a.temporalContext}')` });
+    }
+    if ((a.presentationRole === 'present_day_regional' || a.presentationRole === 'present_day_company') && a.temporalContext !== 'present_day') {
+      failures.push({ ruleId: 'M23-presentation-honest', entityId: a.id, message: `presentationRole '${a.presentationRole}' requires temporalContext 'present_day' (got '${a.temporalContext}')` });
+    }
   }
 
   // ML — links
@@ -307,12 +339,26 @@ export interface CoverView {
   alt: string;
   width: number;
   height: number;
+  /** Short headline for the DEFAULT visible caption (e.g. "Philips factories, Eindhoven (1949)"). */
+  title: string;
+  /** Full documentary caption — moved into the "Credit & rights" disclosure. */
   caption: string;
+  /** Short creator credit for the default caption. */
+  creator: string | null;
+  /** Full required credit line — shown in the disclosure. */
   credit: string;
+  /** Human date label, e.g. "Photographed 1949". */
+  dateLabel: string | null;
+  /** Original filename before web-delivery scaling, if this is a derivative. */
+  originalFilename: string | null;
   type: MediaType;
   temporalContext: MediaTemporalContext;
   /** Human temporal label derived from temporalContext (never "present-day" for a diagram). */
   temporalLabel: string;
+  /** Explicit reader-facing role. */
+  presentationRole: MediaPresentationRole;
+  /** Human label for the presentation role (e.g. "Present-day regional context"). */
+  presentationLabel: string;
   sourceUrl: string;
   licenseName: string | null;
   licenseUrl: string | null;
@@ -326,11 +372,17 @@ function toCoverView(a: MediaAsset | undefined): CoverView | null {
     alt: a.altText,
     width: a.width,
     height: a.height,
+    title: a.title,
     caption: a.caption,
+    creator: a.creator,
     credit: a.rights.requiredCreditLine,
+    dateLabel: a.dateLabel,
+    originalFilename: a.derivative?.originalFilename ?? null,
     type: a.type,
     temporalContext: a.temporalContext,
     temporalLabel: temporalLabel(a.temporalContext),
+    presentationRole: a.presentationRole,
+    presentationLabel: presentationLabel(a.presentationRole),
     sourceUrl: a.sourceUrl,
     licenseName: a.rights.licenseName,
     licenseUrl: a.rights.licenseUrl,

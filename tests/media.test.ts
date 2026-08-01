@@ -36,7 +36,7 @@ const asset = (over: Partial<MediaAsset> = {}): MediaAsset => ({
   sourceUrl: 'https://commons.wikimedia.org/wiki/File:X.jpg',
   localAssetPath: '/media/x.jpg', remoteUrl: null,
   rights: { status: 'open_license', licenseName: 'CC BY-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0', rightsHolder: 'A', requiredCreditLine: 'A, CC BY-SA 4.0', permittedForPublicWebsite: true, permittedForPortfolioPresentation: true },
-  attribution: 'Photo: A', historicalLimitations: 'Present-day.', altText: 'alt', width: 800, height: 600, temporalContext: 'present_day', derivative: null,
+  attribution: 'Photo: A', historicalLimitations: 'Present-day.', altText: 'alt', width: 800, height: 600, temporalContext: 'present_day', presentationRole: 'present_day_regional', derivative: null,
   ...over,
 });
 const link = (over: Partial<MediaLink> = {}): MediaLink => ({
@@ -123,11 +123,23 @@ describe('Media validation (M-series)', () => {
 });
 
 describe('Media loader + selectors', () => {
-  it('loads the production pack (4 assets, all public) for Netherlands', () => {
+  it('loads the production pack (12 assets, all public) for Netherlands', () => {
     const pack = getCaseMedia(CASE);
-    expect(pack.assets.length).toBe(4);
-    expect(publicAssets(pack).length).toBe(4);
+    expect(pack.assets.length).toBe(12);
+    expect(publicAssets(pack).length).toBe(12);
     for (const a of publicAssets(pack)) expect(a.rights.requiredCreditLine.trim().length).toBeGreaterThan(0);
+  });
+
+  it('every asset carries an honest, temporally-consistent presentation role', () => {
+    const pack = getCaseMedia(CASE);
+    for (const a of pack.assets) {
+      if (a.presentationRole === 'historical_photograph') expect(a.temporalContext).toBe('historical');
+      if (a.presentationRole === 'present_day_regional' || a.presentationRole === 'present_day_company') expect(a.temporalContext).toBe('present_day');
+    }
+    // the historical Philips + 1989 photos are present and honestly framed
+    const byId = new Map(pack.assets.map((a) => [a.id, a]));
+    expect(byId.get('nl-media-philips-fabrieken-1949')!.temporalContext).toBe('historical');
+    expect(byId.get('nl-media-microelectronics-1989')!.temporalContext).toBe('historical');
   });
 
   it('planned cases carry no production media (no cover, no evidence image)', () => {
