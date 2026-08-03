@@ -135,24 +135,38 @@ describe('AtlasCase — selectors and filters', () => {
     expect(casesByIndustry(cases, null).length).toBe(3);
   });
 
-  it('recovers the selection when the selected case is filtered out', () => {
-    const state = { ...initialAtlasIndexState(cases[0]!.id), statusFilter: 'planned' as const };
+  it('opens in the neutral state — no case is auto-selected on first load', () => {
+    // Stage 9: the atlas never pre-selects a case (in particular, never NL).
+    expect(initialAtlasIndexState().selectedCaseId).toBe(null);
+  });
+
+  it('clears the selection (returns to neutral) when the selected case is filtered out', () => {
+    const state = { ...initialAtlasIndexState(), statusFilter: 'planned' as const };
     const visible = visibleCases(cases, state);
-    // NL (first case) is filtered out by 'planned' → recover to first visible
-    expect(recoverSelection(visible, cases[0]!.id)).toBe(visible[0]!.id);
+    // NL is filtered out by 'planned' → selection returns to neutral (null), never auto-swaps
+    expect(recoverSelection(visible, bySlug('netherlands-semiconductor-equipment').id)).toBe(null);
+    // a still-visible (planned) selection is kept
+    expect(recoverSelection(visible, visible[0]!.id)).toBe(visible[0]!.id);
     expect(visible.every((c) => c.status === 'planned')).toBe(true);
   });
 
-  it('reducer keeps a still-visible selection but recovers a filtered-out one', () => {
-    let s = initialAtlasIndexState(bySlug('netherlands-semiconductor-equipment').id);
-    // select Taiwan, then filter to in_research → Taiwan gone → recover to NL
+  it('reducer keeps a still-visible selection but clears a filtered-out one (never auto-selects a replacement)', () => {
+    let s = initialAtlasIndexState();
+    // select Taiwan, then filter to in_research → Taiwan gone → neutral (null), NOT NL
     s = atlasIndexReducer(cases, s, { type: 'selectCase', caseId: bySlug('taiwan-semiconductor-manufacturing').id });
     s = atlasIndexReducer(cases, s, { type: 'setStatusFilter', status: 'in_research' });
-    expect(s.selectedCaseId).toBe(bySlug('netherlands-semiconductor-equipment').id);
-    // reset restores all + keeps a visible selection
+    expect(s.selectedCaseId).toBe(null);
+    // reset restores all filters (still neutral)
     s = atlasIndexReducer(cases, s, { type: 'reset' });
     expect(s.statusFilter).toBe('all');
     expect(s.industryFilter).toBe(null);
+  });
+
+  it('deselect returns to the neutral world state', () => {
+    let s = atlasIndexReducer(cases, initialAtlasIndexState(), { type: 'selectCase', caseId: bySlug('netherlands-semiconductor-equipment').id });
+    expect(s.selectedCaseId).not.toBe(null);
+    s = atlasIndexReducer(cases, s, { type: 'deselect' });
+    expect(s.selectedCaseId).toBe(null);
   });
 });
 

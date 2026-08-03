@@ -22,6 +22,13 @@ const WORLD_BOUNDS: [[number, number], [number, number]] = [
   [128, 56],
 ];
 
+/** Ordinary-user words for the marker's accessible label. */
+const STATUS_WORD: Record<string, string> = {
+  in_research: 'research in progress',
+  planned: 'research planned',
+  published: 'published',
+};
+
 export default function AtlasIndexMap({
   features,
   selectedCaseId,
@@ -109,12 +116,16 @@ export default function AtlasIndexMap({
         const [lng, lat] = feature.geometry.coordinates;
         const { caseId, status, title, country } = feature.properties;
 
+        const { industry } = feature.properties;
         const el = document.createElement('button');
         el.type = 'button';
         el.className = 'atlas-nav-marker';
         el.dataset['status'] = status;
         el.dataset['case'] = caseId;
-        el.setAttribute('aria-label', `${title} — ${country} (navigation marker: opens the case)`);
+        // Keyboard-focusable, descriptively labelled control. A native <button>
+        // activates on both Enter and Space and fires the same handler as a pointer
+        // click, so keyboard and pointer select the identical country.
+        el.setAttribute('aria-label', `${country} — ${industry}. ${STATUS_WORD[status] ?? status}. Select to open the country summary.`);
         el.innerHTML =
           `<span class="anm-dot" aria-hidden="true"></span>` +
           `<span class="anm-label">${country}</span>`;
@@ -168,5 +179,8 @@ export default function AtlasIndexMap({
     }
   }, [selectedCaseId, reducedMotion, features]);
 
-  return <div ref={containerRef} className="ai-map-canvas" aria-hidden="true" />;
+  // The container is a labelled region (NOT aria-hidden) so its country markers
+  // are reachable in the keyboard/screen-reader tab order — the map is the primary
+  // product interaction, with "Browse countries" as an alternative path.
+  return <div ref={containerRef} className="ai-map-canvas" role="group" aria-label="World map — select a country marker to open its summary" />;
 }

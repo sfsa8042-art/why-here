@@ -24,6 +24,8 @@ import { getAtlasCases } from '../lib/atlasCases.ts';
 import { exploreGateFailures } from '../lib/exploreGate.ts';
 import { validateAtlasPreviews } from '../lib/atlasPreview.ts';
 import { atlasPreviews } from '../content/atlas/previews.ts';
+import { validateCountryPresentations } from '../lib/atlasPresentation.ts';
+import { countryPresentations } from '../content/atlas/presentation.ts';
 
 const loaded = loadCorpus(productionRegistry);
 
@@ -79,6 +81,15 @@ const previewFailures = validateAtlasPreviews(atlasPreviews);
 if (previewFailures.length > 0) {
   for (const f of previewFailures) console.error(`${f.ruleId} ${f.slug}: ${f.message}`);
   console.error(`validate-content: ${previewFailures.length} atlas-preview failure(s).`);
+  process.exit(1);
+}
+
+// Country presentation copy (Stage 9.1) — Atlas summary specialisation + question,
+// linked to real cases and complete for every case, build-blocking.
+const presentationFailures = validateCountryPresentations(countryPresentations, getAtlasCases().map((c) => c.slug));
+if (presentationFailures.length > 0) {
+  for (const f of presentationFailures) console.error(`${f.ruleId} ${f.slug}: ${f.message}`);
+  console.error(`validate-content: ${presentationFailures.length} country-presentation failure(s).`);
   process.exit(1);
 }
 

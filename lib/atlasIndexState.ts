@@ -16,8 +16,13 @@ export interface AtlasIndexState {
   industryFilter: string | null;
 }
 
-export function initialAtlasIndexState(firstCaseId: string | null): AtlasIndexState {
-  return { selectedCaseId: firstCaseId, statusFilter: 'all', industryFilter: null };
+/**
+ * Neutral initial state (Stage 9): NO case is selected on first load. The map
+ * opens on the world view and the user chooses a country — the atlas never
+ * pre-selects a case (in particular, never the Netherlands).
+ */
+export function initialAtlasIndexState(): AtlasIndexState {
+  return { selectedCaseId: null, statusFilter: 'all', industryFilter: null };
 }
 
 /** Cases visible under the current status + industry filters. */
@@ -27,15 +32,18 @@ export function visibleCases(cases: readonly AtlasCase[], state: AtlasIndexState
 
 /**
  * Recover the selection after a filter change: keep the current selection if it
- * is still visible, otherwise select the first visible case, otherwise none.
+ * is still visible, otherwise return to the NEUTRAL (no selection) state. The
+ * atlas never auto-selects a replacement case — closing/filtering-out a country
+ * returns to the world view.
  */
 export function recoverSelection(visible: readonly AtlasCase[], selectedCaseId: string | null): string | null {
   if (selectedCaseId !== null && visible.some((c) => c.id === selectedCaseId)) return selectedCaseId;
-  return visible[0]?.id ?? null;
+  return null;
 }
 
 export type AtlasIndexAction =
   | { type: 'selectCase'; caseId: string }
+  | { type: 'deselect' }
   | { type: 'setStatusFilter'; status: StatusFilterValue }
   | { type: 'setIndustryFilter'; industry: string | null }
   | { type: 'reset' };
@@ -49,6 +57,8 @@ export function atlasIndexReducer(
   switch (action.type) {
     case 'selectCase':
       return { ...state, selectedCaseId: action.caseId };
+    case 'deselect':
+      return { ...state, selectedCaseId: null };
     case 'setStatusFilter': {
       const next = { ...state, statusFilter: action.status };
       return { ...next, selectedCaseId: recoverSelection(visibleCases(cases, next), state.selectedCaseId) };

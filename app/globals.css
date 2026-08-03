@@ -1378,3 +1378,357 @@ p { margin: 0.5rem 0; }
   .aip-beats { display: none; }
   .aip-beats-compact { display: block; }
 }
+
+/* ================================================================== *
+ * Stage 8 — public UX + visual-storytelling redesign
+ * Split editorial hero (bounded photo), interactive lithography explainer,
+ * named navigation + progress, linear continue-CTAs, 4K-fluid responsiveness.
+ * ================================================================== */
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ---- Split editorial hero ---------------------------------------- */
+.hero {
+  position: relative; min-height: 100dvh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; overflow: hidden;
+  padding: clamp(84px, 9vh, 150px) clamp(20px, 4vw, 96px) clamp(64px, 9vh, 110px);
+}
+.hero-grid {
+  width: 100%; max-width: clamp(60rem, 84vw, 112rem);
+  display: grid; grid-template-columns: 46fr 54fr; gap: clamp(28px, 4vw, 76px); align-items: center;
+}
+.hero-content { max-width: 48ch; }
+.hero-eyebrow { font-size: clamp(12px, 0.9vw, 16px); letter-spacing: 0.16em; text-transform: uppercase; color: var(--signal); margin: 0 0 clamp(16px, 1.6vw, 28px); }
+.hero-title { font-size: clamp(30px, 3.5vw, 60px); line-height: 1.06; letter-spacing: -0.02em; font-weight: 700; color: var(--text-primary); margin: 0 0 clamp(16px, 1.6vw, 26px); text-wrap: balance; max-width: 20ch; }
+.hero-sub { font-size: clamp(15px, 1.25vw, 21px); line-height: 1.55; color: var(--text-elevated); margin: 0 0 clamp(18px, 1.6vw, 26px); max-width: 44ch; }
+.hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: clamp(12px, 0.9vw, 15px); color: var(--text-muted); margin: 0 0 clamp(22px, 2vw, 34px); }
+.hero-meta-sep { color: var(--text-faint); }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 clamp(20px, 2vw, 30px); }
+.hero-status { display: inline-flex; align-items: center; gap: 8px; font-size: clamp(11px, 0.8vw, 14px); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); margin: 0; }
+.hero-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+.hero-media { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.hero-media-frame {
+  position: relative; width: 100%; aspect-ratio: 4 / 3; max-height: min(74vh, 900px);
+  border-radius: var(--r-card); overflow: hidden; border: 1px solid var(--border-subtle); background: var(--panel);
+}
+.hero-media-img { object-fit: cover; object-position: center 42%; }
+.hero-media-badge { position: absolute; left: 14px; top: 14px; font-size: 11px; padding: 5px 12px; border-radius: var(--r-pill); background: rgba(14,16,18,0.82); border: 1px solid var(--border-strong); color: var(--text-elevated); }
+.hero-media-cap { display: flex; flex-direction: column; gap: 3px; font-size: clamp(11px, 0.8vw, 13px); font-family: var(--mono); }
+.hero-media-cap-main { color: var(--text-muted); }
+.hero-media-cap-note { color: var(--text-elevated); font-family: var(--font); font-style: italic; font-size: clamp(11px, 0.82vw, 13px); }
+.hero-media-cap-credit { color: var(--text-faint); font-size: clamp(10px, 0.72vw, 12px); }
+.hero-scrollcue { position: absolute; bottom: clamp(16px, 3vh, 34px); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-muted); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.hero-scrollcue:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; border-radius: 4px; }
+.hero-scrollcue-arrow { font-size: 15px; }
+.ep-doc--motion .hero-scrollcue-arrow { animation: hero-cue 1.8s ease-in-out infinite; }
+@keyframes hero-cue { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+
+/* ---- Named navigation + reading progress ------------------------- */
+.ep-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center;
+  gap: clamp(12px, 1.6vw, 30px); padding: 10px clamp(16px, 3vw, 56px);
+  background: rgba(14,16,18,0.82); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle);
+}
+.ep-nav-home { font-weight: 600; color: var(--text-strong); white-space: nowrap; font-size: clamp(12px, 0.85vw, 15px); }
+.ep-nav-list { display: flex; gap: clamp(10px, 1.5vw, 28px); list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
+.ep-nav-list a { color: var(--text-muted); white-space: nowrap; font-size: clamp(12px, 0.85vw, 15px); padding: 4px 1px; }
+.ep-nav-list a:hover { color: var(--text-primary); }
+.ep-nav-list a[aria-current="true"] { color: var(--text-primary); box-shadow: inset 0 -2px 0 var(--signal); }
+.ep-nav-list a:focus-visible, .ep-nav-home:focus-visible, .ep-nav-evidence:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; border-radius: 3px; }
+.ep-nav-evidence { margin-left: auto; color: var(--signal); font-weight: 600; white-space: nowrap; font-size: clamp(12px, 0.85vw, 15px); }
+.ep-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; overflow: hidden; }
+.ep-progress-bar { display: block; height: 100%; width: 100%; transform-origin: left center; background: var(--signal); will-change: transform; }
+
+/* ---- Interactive lithography explainer --------------------------- */
+.lse { display: grid; grid-template-columns: 1fr; gap: clamp(22px, 3vw, 44px); margin: clamp(20px, 3vw, 40px) 0 clamp(16px, 2vw, 28px); }
+.lse-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.lse-step { width: 100%; display: flex; gap: 14px; align-items: flex-start; text-align: left; cursor: pointer; padding: 14px 16px; min-height: 44px; border-radius: var(--r-chip); background: var(--panel); border: 1px solid var(--border-subtle); color: var(--text-body); }
+.lse-step:hover { border-color: var(--border-strong); }
+.lse-step[aria-current="step"] { border-color: var(--signal); background: var(--raised); box-shadow: inset 3px 0 0 var(--signal); }
+.lse-step:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.lse-step-n { flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-strong); color: var(--text-muted); display: grid; place-items: center; font-size: 13px; font-weight: 600; }
+.lse-step[aria-current="step"] .lse-step-n { border-color: var(--signal); color: var(--signal); }
+.lse-step-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.lse-step-title { font-size: clamp(15px, 1.1vw, 18px); font-weight: 600; color: var(--text-primary); }
+.lse-step-body { font-size: clamp(13px, 0.95vw, 15px); line-height: 1.45; color: var(--text-muted); }
+.lse-visual { display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; }
+/* Cap the height so the whole light→wafer path (incl. the exposure grid payoff)
+   is visible within one screen on the QA desktop viewport, not scrolled off. */
+.lse-svg { width: 100%; max-width: 400px; max-height: min(60vh, 440px); height: auto; }
+.lse-disclaimer { font-size: 11.5px; color: var(--text-faint); margin: 0; }
+@media (min-width: 880px) {
+  .lse { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); align-items: start; }
+  .lse-visual { position: sticky; top: 88px; }
+}
+/* SVG element styling */
+.lse-lamp { fill: var(--signal); }
+.lse-rays line { stroke: var(--signal); stroke-width: 2.5; stroke-linecap: round; }
+.lse-beam { fill: var(--signal); opacity: 0.30; }
+.lse-mask-bar { fill: var(--raised); stroke: var(--border-strong); stroke-width: 1.5; }
+.lse-mask-pat rect { fill: var(--signal); opacity: 0.9; }
+.lse-cone { fill: var(--signal); opacity: 0.22; }
+.lse-lens { fill: var(--overlay); stroke: var(--border-strong); stroke-width: 1.5; }
+.lse-wafer-disc { fill: var(--panel); stroke: var(--border-strong); stroke-width: 1.5; }
+.lse-field { fill: var(--signal); opacity: 0.4; }
+.lse-field.is-exposing { opacity: 0.95; }
+.lse-arrow { fill: none; stroke: var(--text-elevated); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.lse-label { fill: var(--text-elevated); font-family: var(--font); font-size: 15px; font-weight: 600; letter-spacing: 0.01em; }
+/* active-step emphasis — non-active groups dim but stay readable */
+.lse-o { transition: opacity 0.3s ease; }
+.lse--light .lse-o:not(.lse-o-light),
+.lse--mask .lse-o:not(.lse-o-mask),
+.lse--lenses .lse-o:not(.lse-o-lenses),
+.lse--wafer .lse-o:not(.lse-o-wafer) { opacity: 0.68; }
+.lse--light .lse-o-light .lse-lamp,
+.lse--mask .lse-o-mask .lse-mask-bar,
+.lse--lenses .lse-o-lenses .lse-lens,
+.lse--wafer .lse-o-wafer .lse-wafer-disc { stroke: var(--signal); }
+.ep-doc--motion .lse-beam { animation: lse-glow 3s ease-in-out infinite; }
+@keyframes lse-glow { 0%, 100% { opacity: 0.08; } 50% { opacity: 0.2; } }
+.ep-doc--motion .lse-field.is-exposing { animation: lse-expose 2.4s ease-in-out infinite; }
+@keyframes lse-expose { 0%, 100% { opacity: 0.5; } 45% { opacity: 1; } }
+
+/* ---- Linear continue CTA ----------------------------------------- */
+.section-continue { display: flex; justify-content: center; padding: clamp(28px, 4vw, 56px) clamp(20px, 4vw, 40px) 0; }
+.continue-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 13px 28px; border-radius: var(--r-pill); background: var(--raised); border: 1px solid var(--border-strong); color: var(--text-primary); font-size: clamp(14px, 1vw, 16px); font-weight: 600; }
+.continue-btn:hover { border-color: var(--signal); }
+.continue-btn:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+
+/* ---- Evidence basis line ----------------------------------------- */
+.ev-basis { font-size: 13px; color: var(--text-muted); margin: 0 0 8px; }
+
+/* ---- 4K / wide editorial grid (avoid a tiny central island) ------ */
+@media (min-width: 1700px) {
+  .ep-doc { font-size: 17px; }
+  .explain-inner, .chapter-head, .chapter-body, .chapter-foot, .frontier-inner, .c2-events, .c2-tech, .chapter-strip, .c2-interlude { max-width: clamp(1040px, 66vw, 1480px); }
+  .chapter--events > *, .c3-stage, .chapter-strip--wide { max-width: clamp(1200px, 72vw, 1640px); }
+  .explain-lead, .chapter-prose, .frontier-grow, .cb-est { max-width: 72ch; }
+}
+
+/* ---- Mobile navigation (compact, named, closable) ---------------- */
+@media (max-width: 720px) {
+  .ep-nav--full { display: none; }
+  .ep-nav-mobile {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center; gap: 12px;
+    padding: 8px 14px; background: rgba(14,16,18,0.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle);
+  }
+  .ep-nav-mobile .ep-nav-home { min-height: 44px; display: inline-flex; align-items: center; font-size: 13px; }
+  .ep-nav-toggle { margin-left: auto; min-height: 44px; display: inline-flex; align-items: center; gap: 10px; max-width: 68%; padding: 6px 14px; cursor: pointer; background: var(--raised); color: var(--text-body); border: 1px solid var(--border-strong); border-radius: var(--r-pill); }
+  .ep-nav-current { font-size: 13px; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ep-nav-caret { color: var(--text-muted); font-size: 11px; }
+  .ep-nav-toggle:focus-visible, .ep-nav-close:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+  .ep-progress--mobile { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; }
+  .ep-nav-sheet-wrap { position: absolute; top: 100%; left: 8px; right: 8px; margin-top: 6px; background: var(--panel); border: 1px solid var(--border-strong); border-radius: var(--r-chip); box-shadow: 0 14px 34px rgba(0,0,0,0.5); overflow: hidden; }
+  .ep-nav-sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-bottom: 1px solid var(--border-subtle); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+  .ep-nav-close { background: none; border: 0; color: var(--text-muted); font-size: 15px; cursor: pointer; min-width: 44px; min-height: 44px; }
+  .ep-nav-sheet { position: static; margin: 0; padding: 6px; list-style: none; background: none; border: 0; box-shadow: none; }
+  .ep-nav-sheet a { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; border-radius: var(--r-chip); color: var(--text-body); font-size: 14px; }
+  .ep-nav-sheet a[aria-current="true"] { color: var(--text-primary); background: var(--raised); box-shadow: inset 2px 0 0 var(--signal); }
+  .ep-nav-sheet-evidence { border-top: 1px solid var(--border-subtle); margin-top: 4px; padding-top: 4px; }
+  .ep-nav-sheet-evidence a { color: var(--signal); }
+
+  .hero { min-height: auto; padding: 84px 18px 48px; }
+  .hero-grid { grid-template-columns: 1fr; gap: 26px; }
+  .hero-media-frame { aspect-ratio: 3 / 2; max-height: 52vh; }
+  .hero-scrollcue { display: none; }
+}
+
+/* ================================================================== *
+ * Stage 9 — Landing page (/) + map-first Atlas (/atlas)
+ * ================================================================== */
+
+/* ---- Landing page ------------------------------------------------- */
+.landing { padding-bottom: 24px; }
+.landing-grid {
+  display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(28px, 5vw, 72px);
+  align-items: center; margin-top: clamp(8px, 3vh, 40px);
+}
+.landing-eyebrow { margin: 0 0 16px; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--signal); }
+.landing-title {
+  margin: 0; font-size: clamp(28px, 4.2vw, 54px); line-height: 1.05; letter-spacing: -0.02em;
+  font-weight: 700; color: var(--text-primary); text-wrap: balance; max-width: 20ch;
+}
+.landing-desc { margin: 20px 0 0; max-width: 52ch; font-size: clamp(15px, 1.2vw, 18px); line-height: 1.55; color: var(--text-muted); }
+.landing-cta { margin: 30px 0 0; }
+.landing-count { margin: 18px 0 0; font-family: var(--mono); font-size: 12px; color: var(--text-faint); }
+
+.landing-preview { display: flex; flex-direction: column; gap: 10px; }
+.lmp-svg { width: 100%; height: auto; border: 1px solid var(--border-subtle); border-radius: var(--r-card); background: var(--panel); }
+.lmp-dot { fill: var(--border-strong); opacity: 0.55; }
+.lmp-pin { fill: var(--text-faint); }
+.lmp-halo { fill: none; }
+.lmp-marker.is-live .lmp-pin { fill: var(--signal); }
+.lmp-marker.is-live .lmp-halo { fill: color-mix(in srgb, var(--signal) 22%, transparent); }
+.lmp-text { fill: var(--text-muted); font-family: var(--font); font-size: 16px; font-weight: 600; }
+.lmp-marker.is-live .lmp-text { fill: var(--text-elevated); }
+.landing-preview-cap { margin: 0; text-align: center; font-size: 12px; color: var(--text-faint); }
+
+.landing-format { margin-top: clamp(44px, 7vw, 88px); }
+.landing-format-h { margin: 0 0 20px; font-size: clamp(16px, 1.5vw, 22px); font-weight: 700; color: var(--text-primary); }
+.landing-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.landing-step { display: flex; flex-direction: column; gap: 12px; padding: 18px; border: 1px solid var(--border-subtle); border-radius: var(--r-input); background: var(--panel); }
+.landing-step-n { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 13px; color: var(--signal); border: 1px solid var(--signal); }
+.landing-step-t { font-size: 14px; line-height: 1.4; color: var(--text-body); }
+
+@media (max-width: 900px) { .landing-steps { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 720px) {
+  .landing-grid { grid-template-columns: 1fr; }
+  .landing-steps { grid-template-columns: 1fr; }
+  .landing-preview { order: -1; }
+}
+
+/* ---- Map-first Atlas --------------------------------------------- */
+/* Release the centred .wrap so the atlas fills the viewport below the topbar. */
+.wrap:has(.atlas9) { max-width: none; padding: 0; }
+.atlas9 { display: flex; flex-direction: column; height: calc(100dvh - 60px); overflow: hidden; }
+
+.atlas9-head {
+  flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px 24px; flex-wrap: wrap; padding: 12px clamp(16px, 3vw, 40px);
+  border-bottom: 1px solid var(--border-subtle); background: var(--panel); z-index: 2;
+}
+.atlas9-head-main { min-width: 0; }
+.atlas9-title { margin: 0; font-size: clamp(18px, 1.7vw, 26px); font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); }
+.atlas9-instruction { margin: 4px 0 0; max-width: 64ch; font-size: clamp(12px, 1vw, 14px); color: var(--text-muted); }
+
+.atlas9-tools { display: flex; align-items: center; gap: 10px 12px; flex-wrap: wrap; }
+/* Filters — deliberately secondary (small, quiet). Desktop: inline; the compact
+   "Filters" toggle is mobile-only (hidden here). */
+.atlas9-filterbox { display: inline-flex; align-items: center; gap: 8px; }
+.atlas9-filters-toggle { display: none; }
+.atlas9-filters { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.atlas9-filter { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-faint); }
+.atlas9-filter select {
+  min-height: 34px; padding: 5px 8px; cursor: pointer; font-size: 12px;
+  background: var(--raised); color: var(--text-body); border: 1px solid var(--border-subtle); border-radius: var(--r-input);
+}
+.atlas9-reset {
+  min-height: 34px; padding: 5px 12px; cursor: pointer; font-size: 12px;
+  background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle); border-radius: var(--r-pill);
+}
+.atlas9-reset:hover { color: var(--text-body); border-color: var(--border-strong); }
+
+/* Browse-countries — the accessible (keyboard/SR) path to selection. */
+.atlas9-browse { position: relative; }
+.atlas9-browse-summary {
+  list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  min-height: 38px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+  background: var(--raised); color: var(--text-strong); border: 1px solid var(--border-strong); border-radius: var(--r-pill);
+}
+.atlas9-browse-summary::-webkit-details-marker { display: none; }
+.atlas9-browse-summary::marker { content: ''; }
+.atlas9-browse[open] .atlas9-browse-summary { border-color: var(--signal); color: var(--text-primary); }
+.atlas9-browse-summary:focus-visible, .atlas9-country-btn:focus-visible,
+.atlas9-reset:focus-visible, .atlas9-filter select:focus-visible,
+.atlas9-panel-close:focus-visible, .atlas9-panel-expand:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.atlas9-browse-panel {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; width: min(340px, 86vw);
+  background: var(--panel); border: 1px solid var(--border-strong); border-radius: var(--r-chip);
+  box-shadow: 0 16px 44px rgba(0,0,0,0.55); padding: 8px; max-height: 60vh; overflow-y: auto;
+}
+.atlas9-country-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.atlas9-country-btn {
+  width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center;
+  text-align: left; cursor: pointer; padding: 10px 12px; border: 1px solid var(--border-subtle);
+  border-radius: var(--r-chip); background: var(--raised); color: var(--text-body);
+}
+.atlas9-country-btn:hover { border-color: var(--border-strong); }
+.atlas9-country-btn[aria-pressed="true"] { border-color: var(--signal); box-shadow: inset 2px 0 0 var(--signal); }
+.atlas9-country-name { grid-column: 1; font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.atlas9-country-spec { grid-column: 1; font-size: 12px; color: var(--text-muted); }
+.atlas9-country-status { grid-column: 2; grid-row: 1 / 3; align-self: center; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-faint); white-space: nowrap; }
+.atlas9-country-status[data-status="in_research"] { color: var(--signal); }
+.atlas9-country-empty { padding: 12px; font-size: 13px; color: var(--text-muted); }
+.atlas9-linkbtn { background: none; border: 0; color: var(--signal); cursor: pointer; font: inherit; }
+
+/* Stage — the dominant map surface. */
+.atlas9-stage { position: relative; flex: 1 1 auto; min-height: 0; background: var(--page); overflow: hidden; }
+.atlas9-hint {
+  position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 10;
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px;
+  background: rgba(14,16,18,0.84); backdrop-filter: blur(8px); border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill); color: var(--text-elevated); font-size: 13px;
+}
+.atlas9-hint-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+.atlas9-legend { position: absolute; left: 12px; bottom: 8px; z-index: 6; margin: 0; max-width: 52%; font-size: 10px; color: var(--text-faint); }
+
+/* Desktop: a CONTENT-SIZED, top-right side panel (preserves map context to its
+   left). It grows to its content, capped at the map viewport height; it scrolls
+   internally only when the content genuinely exceeds that cap — so planned cases
+   never leave a large empty lower region. */
+.atlas9-panel {
+  position: absolute; z-index: 20; top: 16px; right: 16px; bottom: auto;
+  height: auto; max-height: calc(100% - 32px); width: clamp(320px, 27vw, 404px);
+  display: flex; flex-direction: column; padding: 22px; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--border-strong); border-radius: var(--r-card);
+  box-shadow: 0 18px 54px rgba(0,0,0,0.55);
+}
+.atlas9-panel-grip { display: none; }
+.atlas9-panel-close {
+  position: absolute; top: 12px; right: 12px; min-width: 40px; min-height: 40px;
+  background: none; border: 0; color: var(--text-muted); font-size: 15px; cursor: pointer; border-radius: var(--r-pill);
+}
+.atlas9-panel-close:hover { color: var(--text-primary); }
+.atlas9-panel-country { margin: 4px 40px 0 0; font-size: clamp(22px, 2vw, 30px); font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); }
+.atlas9-panel-spec { margin: 10px 0 0; display: flex; flex-direction: column; gap: 2px; }
+.atlas9-panel-spec-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); }
+.atlas9-panel-spec-value { font-size: 15px; color: var(--text-elevated); }
+.atlas9-panel-status { margin: 14px 0 0; display: inline-flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.atlas9-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-faint); }
+.atlas9-panel[data-status="in_research"] .atlas9-status-dot { background: var(--signal); }
+.atlas9-panel-expand { display: none; }
+.atlas9-panel-body { margin-top: 18px; }
+.atlas9-panel-q { margin: 0; font-size: clamp(16px, 1.3vw, 20px); line-height: 1.3; font-weight: 600; color: var(--text-primary); text-wrap: balance; }
+.atlas9-panel-meta { margin: 14px 0 0; display: flex; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+.atlas9-panel-sep { color: var(--text-faint); }
+.atlas9-panel-cta { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+.atlas9-panel-cta .btn { width: 100%; }
+.atlas9-panel-planned { margin: 16px 0 0; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+
+/* Mobile: compact bottom sheet — collapsed shows country/specialisation/status;
+   expanding reveals the question + actions. It never permanently covers the map. */
+@media (max-width: 720px) {
+  .atlas9-head { flex-direction: column; align-items: stretch; gap: 8px; padding-top: 10px; padding-bottom: 10px; }
+  .atlas9-instruction { font-size: 12px; } /* kept, compact — filters fold away below */
+  .atlas9-tools { width: 100%; justify-content: space-between; }
+  .atlas9-browse-panel { position: fixed; left: 8px; right: 8px; top: auto; width: auto; }
+  .atlas9-legend { max-width: 70%; }
+
+  /* Filters fold behind a compact "Filters" toggle (dropdown when open). */
+  .atlas9-filterbox { position: relative; }
+  .atlas9-filters-toggle {
+    display: inline-flex; align-items: center; min-height: 38px; padding: 8px 16px; cursor: pointer;
+    font-size: 13px; font-weight: 600; background: var(--raised); color: var(--text-strong);
+    border: 1px solid var(--border-strong); border-radius: var(--r-pill);
+  }
+  .atlas9-filters {
+    display: none; position: absolute; left: 0; top: calc(100% + 8px); z-index: 40;
+    flex-direction: column; align-items: stretch; gap: 12px; width: min(280px, 82vw); padding: 12px;
+    background: var(--panel); border: 1px solid var(--border-strong); border-radius: var(--r-chip);
+    box-shadow: 0 16px 44px rgba(0,0,0,0.55);
+  }
+  .atlas9-filterbox[data-open="true"] .atlas9-filters { display: flex; }
+  .atlas9-filter { font-size: 12px; }
+  .atlas9-filter select { width: 100%; }
+
+  .atlas9-panel {
+    top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 60vh;
+    padding: 16px 16px 22px; border-width: 1px 0 0 0;
+    border-radius: 18px 18px 0 0; box-shadow: 0 -14px 44px rgba(0,0,0,0.55);
+  }
+  .atlas9-panel-grip { display: block; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 44px; height: 4px; border-radius: 2px; background: var(--border-strong); }
+  .atlas9-panel-country { margin-top: 12px; }
+  .atlas9-panel-expand {
+    display: inline-flex; align-items: center; margin-top: 14px; min-height: 40px; padding: 8px 14px;
+    cursor: pointer; font-size: 13px; font-weight: 600; background: var(--raised); color: var(--text-strong);
+    border: 1px solid var(--border-strong); border-radius: var(--r-pill);
+  }
+  .atlas9-panel[data-expanded="false"] .atlas9-panel-body { display: none; }
+  .atlas9-panel[data-expanded="true"] { max-height: 78vh; }
+
+  /* Lift the neutral "Select a country" cue clear of the map attribution and the
+     device safe area (it only shows when nothing is selected, so it never meets
+     the bottom sheet). Centred, so it cannot cause horizontal overflow. */
+  .atlas9-hint { bottom: calc(58px + env(safe-area-inset-bottom, 0px)); max-width: calc(100vw - 32px); }
+  .atlas9-legend { bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+}

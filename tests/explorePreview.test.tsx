@@ -12,25 +12,29 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { ExplorePreviewShell } from '@/components/explore/ExplorePreviewShell.tsx';
-import { LithographyExplainer } from '@/components/explore/LithographyExplainer.tsx';
+import { LithographyStepExplainer } from '@/components/explore/LithographyStepExplainer.tsx';
 import { buildChaptersView } from '@/lib/chapters';
 import { caseCover } from '@/lib/media';
-import { AtlasIndexShell } from '@/components/atlasindex/AtlasIndexShell.tsx';
 import { caseBySlug, getAtlasCases } from '@/lib/atlasCases';
 import PublicExplorePage, { metadata as exploreMetadata } from '@/app/atlas/netherlands-semiconductor-equipment/page';
 import nextConfig from '@/next.config';
 
 const CASE = 'netherlands-semiconductor-equipment';
 const view = buildChaptersView(CASE);
-const html = renderToStaticMarkup(<ExplorePreviewShell view={view} evidenceHref={`/evidence/${CASE}`} heroImage={caseCover(CASE)} />);
+const heroMeta = { chapters: 3, minutes: 6, findings: 17 };
+const html = renderToStaticMarkup(<ExplorePreviewShell view={view} evidenceHref={`/evidence/${CASE}`} heroImage={caseCover(CASE)} heroMeta={heroMeta} />);
 
 describe('Explore documentary — hero', () => {
   it('opens with the eyebrow, editorial title, a concrete evidence-backed setup line and both actions', () => {
-    expect(html).toContain('Netherlands × Semiconductor Equipment');
-    expect(html).toContain('Why did advanced chip-making equipment take root here?');
-    expect(html).toContain('In 1984, Philips and ASM assembled a new lithography venture from staff, technology and financial commitments.');
-    expect(html).toContain('Begin the story');
-    expect(html).toContain('See what the evidence supports');
+    expect(html).toContain('Netherlands × Semiconductor equipment');
+    expect(html).toContain('Why did advanced chip-making equipment take root in the Netherlands?');
+    expect(html).toContain('A visual investigation into a fragile 1984 joint venture, its early crisis and the European research network around it.');
+    expect(html).toContain('Start the investigation');
+    expect(html).toContain('View sources');
+    // the editorial context line grounds the reader before the story
+    expect(html).toContain('3 chapters');
+    expect(html).toContain('About 6 minutes');
+    expect(html).toContain('documented findings');
   });
 
   it('shows a non-dominant research-status label with no internal-preview language', () => {
@@ -41,6 +45,40 @@ describe('Explore documentary — hero', () => {
     const routeHtml = renderToStaticMarkup(<PublicExplorePage />);
     expect(routeHtml).not.toContain('INTERNAL PREVIEW');
     expect(routeHtml).not.toContain('internal preview');
+  });
+});
+
+describe('Explore documentary — Stage 8 hero image, named nav & linear flow', () => {
+  it('renders the hero through a responsive <img> (next/image) in a bounded panel, never a CSS background', () => {
+    expect(html).toContain('hero-media-img');
+    expect(html.toLowerCase()).toContain('srcset'); // next/image responsive source set
+    const css = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8');
+    // the principal hero photo is NOT painted as a stretched CSS background…
+    expect(css).not.toMatch(/\.hero-media-frame\s*\{[^}]*background-image/);
+    // …and its panel is BOUNDED (aspect-ratio + capped height) so it cannot stretch on 4K.
+    expect(css).toMatch(/\.hero-media-frame\s*\{[^}]*aspect-ratio/);
+    expect(css).toMatch(/\.hero-media-frame\s*\{[^}]*max-height/);
+  });
+
+  it('the desktop navigation uses named destinations (no bare 1/2/3) and a reading-progress bar', () => {
+    const nav = html.slice(html.indexOf('ep-nav--full'), html.indexOf('ep-nav-mobile'));
+    for (const label of ['Overview', 'What is lithography?', '1984 · Joint venture', '1983–1988 · Crisis', '1988–1991 · European network', 'Open questions']) {
+      expect(nav).toContain(label);
+    }
+    // the primary public nav says "Sources", never "Evidence"
+    expect(nav).toMatch(/class="ep-nav-evidence"[^>]*>Sources</);
+    expect(nav).not.toContain('>Evidence<');
+    // no bare numeric nav item like <a ...>1</a>
+    expect(nav).not.toMatch(/>[123]<\/a>/);
+    // a thin reading-progress indicator is present
+    expect(html).toContain('ep-progress-bar');
+  });
+
+  it('closes each section with one clear next action (linear reading flow)', () => {
+    for (const cta of ['Continue to the 1984 joint venture', 'Continue to the early crisis', 'Continue to the European network', 'See what remains unanswered']) {
+      expect(html).toContain(cta);
+    }
+    expect(html).toContain('continue-btn');
   });
 });
 
@@ -62,23 +100,30 @@ describe('Explore documentary — no unsupported superlative / concentration cla
       expect(html).not.toContain(phrase);
     }
     // and keeps the approved, corpus-safe framing
-    expect(html).toContain('began building capability in semiconductor lithography');
+    expect(html).toContain('A visual investigation into a fragile 1984 joint venture, its early crisis and the European research network around it.');
     expect(html).toContain('Introductory technical context');
   });
 });
 
 describe('Explore documentary — introductory explainer', () => {
   it('explains lithography in plain language and labels it introductory context', () => {
-    expect(html).toContain('First, what is lithography?');
-    expect(html).toContain('patterned mask');
+    expect(html).toContain('Before the story: what does a lithography machine do?');
+    expect(html).toContain('ultra-precise projector'); // plain-language framing
     expect(html).toContain('Introductory technical context');
   });
 
-  it('renders an original 4-stage lithography explainer (light → pattern → wafer → repeated exposure)', () => {
-    const lx = renderToStaticMarkup(<LithographyExplainer />);
-    for (const stage of ['Light', 'Pattern', 'Wafer', 'Repeated exposure']) expect(lx).toContain(stage);
-    expect(lx).toContain('lx-field'); // the step-and-repeat wafer grid
-    expect(lx).toContain('role="img"'); // accessible description present
+  it('renders the interactive step explainer: four linked steps, a wafer grid and an accessible description', () => {
+    const lx = renderToStaticMarkup(<LithographyStepExplainer />);
+    // the four named steps of the light → wafer path
+    for (const step of ['Light', 'Mask', 'Lenses', 'Wafer']) expect(lx).toContain(step);
+    // each step is a real control the reader can select (keyboard/pointer)
+    expect((lx.match(/class="lse-step"/g) ?? []).length).toBe(4);
+    // the circular wafer carries a field-by-field exposure grid
+    expect(lx).toContain('lse-field');
+    // accessible: an aria description of the whole process is present
+    expect(lx).toMatch(/aria-(label|describedby|current)=/);
+    // the "simplified illustration" disclaimer survives (not a specific machine)
+    expect(lx).toContain('Simplified illustration');
   });
 });
 
@@ -129,11 +174,17 @@ describe('Explore documentary — Stage 6 polish', () => {
     expect(html).toContain('step-and-repeat'); // its caption survives
   });
 
-  it('provides a compact mobile navigation with section/progress and a full sheet', () => {
+  it('provides a compact mobile navigation showing the current section NAME (not a bare number) and a full sheet', () => {
     expect(html).toContain('ep-nav-mobile');
     expect(html).toContain('ep-nav-toggle');
-    expect(html).toContain('1 / 6'); // current-section / total
+    // the compact control shows the current section by NAME…
+    expect(html).toMatch(/class="ep-nav-current">Overview</);
+    // …never a bare "N / 6" counter
+    expect(html).not.toMatch(/\d\s*\/\s*6/);
     expect(html).toContain('ep-nav--full'); // desktop nav retained (CSS toggles visibility)
+    // the mobile toggle controls a full named sheet (rendered on open)
+    const src = readFileSync(join(process.cwd(), 'components/explore/ExplorePreviewShell.tsx'), 'utf8');
+    expect(src).toContain('ep-nav-sheet');
   });
 
   it('the tall ASML-lens portrait carries an asset-specific crop so the head is not cut off', () => {
@@ -154,10 +205,28 @@ describe('Explore documentary — Stage 6 polish', () => {
 
 describe('Explore documentary — real photography integration', () => {
   it('the hero is grounded in the real Eindhoven photograph with an honest role badge', () => {
-    expect(html).toContain('hero-photo');
+    expect(html).toContain('hero-media'); // bounded photographic panel (not a stretched background)
     expect(html).toContain('Binnenstad_Eindhoven.jpg'); // the licence-verified Eindhoven image
     expect(html).toContain('Present-day regional context'); // honest hero badge
     expect(html).toContain('Robert de Greef'); // accessible credit
+  });
+
+  it('the public route hero carries a visible, ordinary-user caption + honest historical clarification (not behind a disclosure)', () => {
+    const routeHtml = renderToStaticMarkup(<PublicExplorePage />);
+    // the exact ordinary-user caption + the honest "not the 1984 site" clarification
+    expect(routeHtml).toContain('Philips industrial complex, Eindhoven, 1949');
+    expect(routeHtml).toContain('Historical industrial context — not the 1984 ASM Lithography site');
+    // the clarification is a plain visible caption span, NOT inside a <details> disclosure
+    expect(routeHtml).toMatch(/class="hero-media-cap-note">Historical industrial context — not the 1984 ASM Lithography site</);
+    const capIdx = routeHtml.indexOf('Historical industrial context — not the 1984 ASM Lithography site');
+    const heroEnd = routeHtml.indexOf('id="explainer"');
+    const detailsBeforeCap = routeHtml.slice(0, capIdx).lastIndexOf('<details');
+    const detailsCloseBeforeCap = routeHtml.slice(0, capIdx).lastIndexOf('</details>');
+    // no <details> is open at the point the clarification is rendered
+    expect(detailsBeforeCap <= detailsCloseBeforeCap).toBe(true);
+    expect(capIdx).toBeLessThan(heroEnd); // and it lives in the hero, above the explainer
+    // the creator credit (rights) is still present in the hero caption
+    expect(routeHtml).toContain('hero-media-cap-credit');
   });
 
   it('weaves licence-verified photographs across the chapters (heritage, technology, local)', () => {
@@ -190,18 +259,17 @@ describe('Explore documentary — evidence on demand', () => {
   });
 
   it('offers the full evidence workspace link', () => {
-    expect(html).toContain('Open full evidence workspace');
+    expect(html).toContain('View all sources'); // frontier CTA into the full record
     expect(html).toContain(`/evidence/${CASE}`);
   });
 
   it('the Explore navigation links to Evidence and back to the Atlas (no dead ends)', () => {
-    expect(html).toContain('Evidence →'); // desktop nav evidence link
-    expect(html).toMatch(/class="ep-nav-evidence" href="\/evidence\/netherlands-semiconductor-equipment"/);
+    expect(html).toMatch(/class="ep-nav-evidence" href="\/evidence\/netherlands-semiconductor-equipment">Sources</); // desktop nav → Sources
     expect(html).toMatch(/href="\/atlas"/); // return to atlas
     expect(html).toContain('Research in progress'); // visible research status
-    // the mobile compact nav also carries an evidence link (rendered when opened)
+    // the mobile compact nav also carries a sources link (rendered when opened)
     const src = readFileSync(join(process.cwd(), 'components/explore/ExplorePreviewShell.tsx'), 'utf8');
-    expect(src).toContain('Open the evidence record →');
+    expect(src).toContain('Sources — the full research record →');
   });
 
   it('never leaks Claim/Source IDs, enums, or provenance jargon by default', () => {
@@ -231,7 +299,7 @@ describe('Explore documentary — research frontier', () => {
     expect(themeCount).toBeLessThanOrEqual(4);
     expect(themeCount).toBe(4);
     expect(html).toContain('This atlas grows as the evidence grows.');
-    expect(html).toContain('Return to the world atlas');
+    expect(html).toContain('Return to the atlas');
   });
 });
 
@@ -280,7 +348,7 @@ describe('Public Explore launch (Stage 7)', () => {
     // no robots noindex on the public route
     expect((exploreMetadata as { robots?: unknown }).robots).toBeUndefined();
     const routeHtml = renderToStaticMarkup(<PublicExplorePage />);
-    expect(routeHtml).toContain('Why did advanced chip-making equipment take root here?');
+    expect(routeHtml).toContain('Why did advanced chip-making equipment take root in the Netherlands?');
   });
 
   it('the canonical route carries sharing metadata + a canonical URL + a local OG image', () => {

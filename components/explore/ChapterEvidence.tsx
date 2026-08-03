@@ -28,6 +28,7 @@ export function ChapterEvidence({
 
   return (
     <div className={`ev${open ? ' is-open' : ''}`}>
+      <p className="ev-basis">Based on {findings}.</p>
       <button type="button" className="ev-toggle" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen((v) => !v)}>
         <span className="ev-toggle-main">How do we know?</span>
         <span className="ev-toggle-summary">{findings} · {sources}</span>

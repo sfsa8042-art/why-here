@@ -3,24 +3,37 @@
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { mapIsFatal, nextMapPhase, type MapEvent, type MapPhase } from '@/lib/mapStatus';
 import type { ChaptersView, ChapterView } from '@/lib/chapters';
 import type { CoverView, MediaItemView } from '@/lib/media';
-import { LithographyExplainer } from './LithographyExplainer.tsx';
 import { LithographyDiagram } from './LithographyDiagram.tsx';
+import { LithographyStepExplainer } from './LithographyStepExplainer.tsx';
 import { ChapterEvidence } from './ChapterEvidence.tsx';
 import { StoryPhoto, PhotoStrip } from './StoryPhoto.tsx';
 
-/** Top-level story sections, for the compact mobile navigation + progress. */
+/** Named top-level destinations — desktop nav, mobile menu and progress. */
 const SECTIONS = [
-  { id: 'hero', label: 'Start' },
-  { id: 'explainer', label: 'How it works' },
-  { id: 'chapter-1', label: '1 · A fragile joint venture' },
-  { id: 'chapter-2', label: '2 · Crisis' },
-  { id: 'chapter-3', label: '3 · European coordination' },
+  { id: 'hero', label: 'Overview' },
+  { id: 'explainer', label: 'What is lithography?' },
+  { id: 'chapter-1', label: '1984 · Joint venture' },
+  { id: 'chapter-2', label: '1983–1988 · Crisis' },
+  { id: 'chapter-3', label: '1988–1991 · European network' },
   { id: 'frontier', label: 'Open questions' },
 ];
+
+/** Editorial hero context numbers (chapters · minutes · documented findings). */
+export interface HeroMeta { chapters: number; minutes: number; findings: number }
+
+/** One clear next action at the end of a section — the reading flow is linear. */
+function ContinueCta({ href, label }: { href: string; label: string }) {
+  return (
+    <div className="section-continue" data-reveal>
+      <a className="continue-btn" href={href}>{label}<span aria-hidden="true"> ↓</span></a>
+    </div>
+  );
+}
 
 /* The MapLibre surface is the only client-only, WebGL-touching boundary. */
 const ExploreStoryMap = dynamic(() => import('./ExploreStoryMap.tsx'), {
@@ -151,6 +164,7 @@ function Chapter2Section({
       )}
 
       <div className="chapter-foot"><ChapterBoundary ch={ch} /></div>
+      <ContinueCta href="#chapter-3" label="Continue to the European network" />
     </section>
   );
 }
@@ -185,12 +199,13 @@ function ConsortiumNetwork({ ch }: { ch: ChapterView }) {
 
 /* ================================================================== */
 
-export function ExplorePreviewShell({ view, evidenceHref, heroImage }: { view: ChaptersView; evidenceHref: string; heroImage: CoverView | null }) {
+export function ExplorePreviewShell({ view, evidenceHref, heroImage, heroMeta, heroCaption, heroContextNote }: { view: ChaptersView; evidenceHref: string; heroImage: CoverView | null; heroMeta: HeroMeta; heroCaption?: string | undefined; heroContextNote?: string | undefined }) {
   const chapters = view.chapters;
   const [reducedMotion, setReducedMotion] = useState(true);
   const [motionOn, setMotionOn] = useState(false);
   const [mapPhase, setMapPhase] = useState<MapPhase>('initializing');
   const [activeIdx, setActiveIdx] = useState(0);
+  const [progress, setProgress] = useState(0);
   const [navOpen, setNavOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -243,6 +258,19 @@ export function ExplorePreviewShell({ view, evidenceHref, heroImage }: { view: C
     return () => io.disconnect();
   }, []);
 
+  // Thin reading-progress indicator (fraction of the document scrolled).
+  useEffect(() => {
+    const root = rootRef.current;
+    if (root === null) return;
+    const onScroll = (): void => {
+      const max = root.scrollHeight - root.clientHeight;
+      setProgress(max > 0 ? Math.min(1, Math.max(0, root.scrollTop / max)) : 0);
+    };
+    onScroll();
+    root.addEventListener('scroll', onScroll, { passive: true });
+    return () => root.removeEventListener('scroll', onScroll);
+  }, []);
+
   const onMapEvent = (event: MapEvent): void => setMapPhase((p) => nextMapPhase(p, event));
   const mapFatal = mapIsFatal(mapPhase);
 
@@ -250,91 +278,122 @@ export function ExplorePreviewShell({ view, evidenceHref, heroImage }: { view: C
 
   return (
     <div className={`ep-doc${motionOn ? ' ep-doc--motion' : ''}`} ref={rootRef}>
-      {/* Desktop: full sticky section navigation (anchor links; keyboard-accessible). */}
+      {/* Desktop: named sticky section navigation + thin reading progress. */}
       <nav className="ep-nav ep-nav--full" aria-label="Story sections">
         <Link className="ep-nav-home" href="/atlas">← Atlas</Link>
-        <a href="#hero">Start</a>
-        <a href="#explainer">How it works</a>
-        <a href="#chapter-1" aria-label="Chapter 1: A fragile joint venture">1</a>
-        <a href="#chapter-2" aria-label="Chapter 2: Crisis without a proven mechanism">2</a>
-        <a href="#chapter-3" aria-label="Chapter 3: European coordination">3</a>
-        <a href="#frontier">Open questions</a>
-        <Link className="ep-nav-evidence" href={evidenceHref}>Evidence →</Link>
+        <ul className="ep-nav-list">
+          {SECTIONS.map((s, i) => (
+            <li key={s.id}>
+              <a href={`#${s.id}`} aria-current={i === activeIdx ? 'true' : undefined}>{s.label}</a>
+            </li>
+          ))}
+        </ul>
+        <Link className="ep-nav-evidence" href={evidenceHref}>Sources</Link>
+        <span className="ep-progress" aria-hidden="true"><span className="ep-progress-bar" style={{ transform: `scaleX(${progress})` }} /></span>
       </nav>
 
-      {/* Mobile: compact navigation — home, a section/progress control, and a menu. */}
+      {/* Mobile: compact control showing the CURRENT section name + a full menu. */}
       <nav className="ep-nav-mobile" aria-label="Story sections">
         <Link className="ep-nav-home" href="/atlas">← Atlas</Link>
         <button type="button" className="ep-nav-toggle" aria-expanded={navOpen} aria-controls="ep-nav-sheet" onClick={() => setNavOpen((v) => !v)}>
-          <span className="ep-nav-pos">{activeIdx + 1} / {SECTIONS.length}</span>
           <span className="ep-nav-current">{SECTIONS[activeIdx]!.label}</span>
           <span className="ep-nav-caret" aria-hidden="true">{navOpen ? '▲' : '▾'}</span>
         </button>
+        <span className="ep-progress ep-progress--mobile" aria-hidden="true"><span className="ep-progress-bar" style={{ transform: `scaleX(${progress})` }} /></span>
         {navOpen && (
-          <ul id="ep-nav-sheet" className="ep-nav-sheet">
-            {SECTIONS.map((s, i) => (
-              <li key={s.id}>
-                <a href={`#${s.id}`} aria-current={i === activeIdx ? 'true' : undefined} onClick={() => setNavOpen(false)}>{s.label}</a>
+          <div className="ep-nav-sheet-wrap">
+            <div className="ep-nav-sheet-head">
+              <span>Jump to</span>
+              <button type="button" className="ep-nav-close" aria-label="Close menu" onClick={() => setNavOpen(false)}>✕</button>
+            </div>
+            <ul id="ep-nav-sheet" className="ep-nav-sheet">
+              {SECTIONS.map((s, i) => (
+                <li key={s.id}>
+                  <a href={`#${s.id}`} aria-current={i === activeIdx ? 'true' : undefined} onClick={() => setNavOpen(false)}>{s.label}</a>
+                </li>
+              ))}
+              <li className="ep-nav-sheet-evidence">
+                <Link href={evidenceHref} onClick={() => setNavOpen(false)}>Sources — the full research record →</Link>
               </li>
-            ))}
-            <li className="ep-nav-sheet-evidence">
-              <Link href={evidenceHref} onClick={() => setNavOpen(false)}>Open the evidence record →</Link>
-            </li>
-          </ul>
+            </ul>
+          </div>
         )}
       </nav>
 
-      {/* 1 — HERO — a real Eindhoven photograph, grounded, with the optical graphic overlaid */}
+      {/* 1 — HERO — split editorial: dark content panel + a bounded photographic panel. */}
       <header className="hero" {...anchorProps('hero')}>
-        {heroImage !== null && (
-          <div className="hero-photo" aria-hidden="true">
-            <img src={heroImage.src} alt="" width={heroImage.width} height={heroImage.height} />
-            <div className="hero-scrim" />
+        <div className="hero-grid">
+          <div className="hero-content">
+            <p className="hero-eyebrow">Netherlands × Semiconductor equipment</p>
+            <h1 className="hero-title">Why did advanced chip-making equipment take root in the Netherlands?</h1>
+            <p className="hero-sub">A visual investigation into a fragile 1984 joint venture, its early crisis and the European research network around it.</p>
+            <p className="hero-meta">
+              <span>{heroMeta.chapters} chapters</span><span className="hero-meta-sep">·</span>
+              <span>About {heroMeta.minutes} minutes</span><span className="hero-meta-sep">·</span>
+              <span>{heroMeta.findings} documented findings</span>
+            </p>
+            <div className="hero-actions">
+              <a className="btn btn-primary" href="#explainer">Start the investigation</a>
+              <Link className="btn btn-ghost" href={evidenceHref}>View sources</Link>
+            </div>
+            <p className="hero-status"><span className="hero-status-dot" aria-hidden="true" />Research in progress</p>
           </div>
-        )}
-        <div className="hero-optic" aria-hidden="true"><LithographyExplainer labelled={false} /></div>
-        <div className="hero-inner">
-          <p className="hero-eyebrow">Netherlands × Semiconductor Equipment</p>
-          <h1 className="hero-title">Why did advanced chip-making equipment take root here?</h1>
-          <p className="hero-sub">In 1984, Philips and ASM assembled a new lithography venture from staff, technology and financial commitments.</p>
-          <div className="hero-actions">
-            <a className="btn btn-primary" href="#explainer">Begin the story</a>
-            <a className="btn btn-ghost" href="#chapter-1">See what the evidence supports</a>
-          </div>
-          <p className="hero-locref" aria-hidden="true"><span className="hero-dot" /> Eindhoven <span className="hero-dot" /> Veldhoven, the Netherlands</p>
+
+          <figure className="hero-media">
+            {heroImage !== null && (
+              <div className="hero-media-frame">
+                <Image
+                  src={heroImage.src}
+                  alt={heroImage.alt}
+                  fill
+                  priority
+                  sizes="(max-width: 900px) 100vw, (max-width: 2000px) 50vw, 980px"
+                  className="hero-media-img"
+                />
+                <span className="hero-media-badge">{heroImage.presentationLabel}</span>
+              </div>
+            )}
+            {heroImage !== null && (
+              <figcaption className="hero-media-cap">
+                <span className="hero-media-cap-main">{heroCaption ?? heroImage.title}</span>
+                {heroContextNote !== undefined && (
+                  <span className="hero-media-cap-note">{heroContextNote}</span>
+                )}
+                {heroImage.creator !== null && (
+                  <span className="hero-media-cap-credit">{heroImage.creator}</span>
+                )}
+              </figcaption>
+            )}
+          </figure>
         </div>
-        {heroImage !== null && (
-          <p className="hero-photo-credit">
-            <span className="hero-photo-badge">{heroImage.presentationLabel}</span>
-            {heroImage.title}{heroImage.creator !== null ? ` · ${heroImage.creator}` : ''}
-          </p>
-        )}
-        <p className="hero-status">Research in progress</p>
+
+        <a className="hero-scrollcue" href="#explainer" aria-label="Scroll to start">
+          <span className="hero-scrollcue-label">Scroll</span>
+          <span className="hero-scrollcue-arrow" aria-hidden="true">↓</span>
+        </a>
       </header>
 
-      {/* 2 — WHY THIS MATTERS / EXPLAINER */}
+      {/* 2 — EXPLAINER — interactive, plain-language "what does a lithography machine do?" */}
       <section className="explain" {...anchorProps('explainer')}>
         <div className="explain-inner" data-reveal>
-          <p className="section-eyebrow">Why this matters</p>
-          <h2 className="section-title">First, what is lithography?</h2>
+          <p className="section-eyebrow">Before the story</p>
+          <h2 className="section-title">Before the story: what does a lithography machine do?</h2>
           <p className="explain-lead">
-            Lithography is how the patterns inside a computer chip get printed. A precise
-            light source shines through a patterned mask onto a light-sensitive wafer, and
-            the pattern is exposed field by field — repeated across the wafer, and repeated
-            again for every layer of the chip. Doing it well demands extraordinary precision.
-            This investigation follows how a Dutch venture began building capability in
-            semiconductor lithography.
+            Think of it as an ultra-precise projector. Light carries a circuit pattern through a
+            mask and a system of lenses onto a silicon wafer.
           </p>
+          <LithographyStepExplainer />
           <p className="explain-tag">Introductory technical context — a general, non-controversial description of the process.</p>
-          <LithographyExplainer />
         </div>
+        <ContinueCta href="#chapter-1" label="Continue to the 1984 joint venture" />
       </section>
 
       {/* 3 — CHAPTER 1 — historical Philips heritage photo + assembly diagram + photo strip */}
       {chapters[0] && m1 && (
         <StoryChapter ch={chapters[0]} sectionId="chapter-1" evidenceHref={evidenceHref}
           leadPhoto={m1.photos[0] ?? null} stripPhotos={m1.photos.slice(1)}
-          visual={<Chapter1Visual />} />
+          visual={<Chapter1Visual />}
+          continueHref="#chapter-2" continueLabel="Continue to the early crisis" />
       )}
 
       {/* 4 — CHAPTER 2 — event-led: contextual interlude, large beats, clean diagram */}
@@ -374,6 +433,7 @@ export function ExplorePreviewShell({ view, evidenceHref, heroImage }: { view: C
             </div>
           )}
           <div className="chapter-foot"><ChapterBoundary ch={ch3} /></div>
+          <ContinueCta href="#frontier" label="See what remains unanswered" />
         </section>
       )}
 
@@ -401,8 +461,8 @@ export function ExplorePreviewShell({ view, evidenceHref, heroImage }: { view: C
           </div>
           <p className="frontier-grow">This atlas grows as the evidence grows.</p>
           <div className="frontier-actions">
-            <Link className="btn btn-primary" href={evidenceHref}>Open full evidence workspace</Link>
-            <Link className="btn btn-ghost" href="/atlas">Return to the world atlas</Link>
+            <Link className="btn btn-primary" href={evidenceHref}>View all sources</Link>
+            <Link className="btn btn-ghost" href="/atlas">Return to the atlas</Link>
           </div>
         </div>
       </section>
@@ -413,11 +473,12 @@ export function ExplorePreviewShell({ view, evidenceHref, heroImage }: { view: C
 /* A standard (non-map) story chapter: big date anchor, an image-led lead photo,
  * the diagram/story two-column, a photo strip between beats, then the boundary. */
 function StoryChapter({
-  ch, sectionId, evidenceHref, visual, compactBoundary, leadPhoto = null, stripPhotos = [],
+  ch, sectionId, evidenceHref, visual, compactBoundary, leadPhoto = null, stripPhotos = [], continueHref, continueLabel,
 }: {
   ch: ChapterView; sectionId: string; evidenceHref: string;
   visual: React.ReactNode; compactBoundary?: string;
   leadPhoto?: MediaItemView | null; stripPhotos?: MediaItemView[];
+  continueHref?: string; continueLabel?: string;
 }) {
   return (
     <section className="chapter" id={sectionId} tabIndex={-1} data-section={sectionId}>
@@ -444,6 +505,7 @@ function StoryChapter({
         </div>
       )}
       <div className="chapter-foot"><ChapterBoundary ch={ch} /></div>
+      {continueHref !== undefined && continueLabel !== undefined && <ContinueCta href={continueHref} label={continueLabel} />}
     </section>
   );
 }
