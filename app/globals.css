@@ -1537,44 +1537,130 @@ p { margin: 0.5rem 0; }
  * Stage 9 — Landing page (/) + map-first Atlas (/atlas)
  * ================================================================== */
 
-/* ---- Landing page ------------------------------------------------- */
-.landing { padding-bottom: 24px; }
-.landing-grid {
-  display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(28px, 5vw, 72px);
-  align-items: center; margin-top: clamp(8px, 3vh, 40px);
+/* ---- Landing page (Stage 10.2 — editorial geographic documentary) ---- */
+/* Release the centred 1100px .wrap so the landing uses a wide editorial canvas. */
+.wrap:has(.landing) { max-width: none; padding: 0; }
+.landing { padding-bottom: clamp(40px, 6vh, 88px); }
+.landing > * { max-width: clamp(60rem, 94vw, 114rem); margin-inline: auto; }
+
+/* Integrated hero: the real atlas map bleeds under an editorial dark gradient. */
+.lhero {
+  position: relative; margin-top: clamp(14px, 2.4vh, 32px);
+  min-height: clamp(430px, 62vh, 680px);
+  border: 1px solid var(--border-subtle); border-radius: var(--r-card); overflow: hidden; background: var(--page);
 }
-.landing-eyebrow { margin: 0 0 16px; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--signal); }
-.landing-title {
-  margin: 0; font-size: clamp(28px, 4.2vw, 54px); line-height: 1.05; letter-spacing: -0.02em;
-  font-weight: 700; color: var(--text-primary); text-wrap: balance; max-width: 20ch;
+.lhero-media { position: absolute; top: 0; right: 0; bottom: 0; left: 30%; overflow: hidden; z-index: 0; }
+/* The map + the signal overlay share ONE coordinate box: an aspect-locked layer
+   centred in the media (manual "cover"), so a signal at asset-% lands on the same
+   pixel as the map at every viewport — no drift from object-fit cropping. */
+.lhero-mapwrap, .lhero-signals {
+  position: absolute; top: 0; bottom: 0; height: 100%; aspect-ratio: 2560 / 1281;
 }
-.landing-desc { margin: 20px 0 0; max-width: 52ch; font-size: clamp(15px, 1.2vw, 18px); line-height: 1.55; color: var(--text-muted); }
-.landing-cta { margin: 30px 0 0; }
-.landing-count { margin: 18px 0 0; font-family: var(--mono); font-size: 12px; color: var(--text-faint); }
+.lhero-mapwrap { left: 50%; transform: translateX(-50%); }              /* centred in the media */
+.lhero-signals { left: 65%; transform: translateX(-50%); z-index: 2; margin: 0; padding: 0; list-style: none; } /* media centre = 30% + 35% */
+/* Lift the basemap ~10% so coastlines/countries read a little more clearly. */
+.lhero-img { object-fit: cover; filter: brightness(1.1) contrast(1.04); }
+.lhero-scrim {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(90deg, var(--page) 0%, var(--page) 25%, color-mix(in srgb, var(--page) 40%, transparent) 35%, transparent 41%);
+}
 
-.landing-preview { display: flex; flex-direction: column; gap: 10px; }
-.lmp-svg { width: 100%; height: auto; border: 1px solid var(--border-subtle); border-radius: var(--r-card); background: var(--panel); }
-.lmp-dot { fill: var(--border-strong); opacity: 0.55; }
-.lmp-pin { fill: var(--text-faint); }
-.lmp-halo { fill: none; }
-.lmp-marker.is-live .lmp-pin { fill: var(--signal); }
-.lmp-marker.is-live .lmp-halo { fill: color-mix(in srgb, var(--signal) 22%, transparent); }
-.lmp-text { fill: var(--text-muted); font-family: var(--font); font-size: 16px; font-weight: 600; }
-.lmp-marker.is-live .lmp-text { fill: var(--text-elevated); }
-.landing-preview-cap { margin: 0; text-align: center; font-size: 12px; color: var(--text-faint); }
+/* Each signal is a zero-size anchor at its geographic asset-%; the pin centres on
+   it and the label is offset (never moving the anchor). */
+.lsig { position: absolute; }
+.lsig-pin { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--text-muted); background: transparent; }
+.lsig-body { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; width: max-content; max-width: 15rem; line-height: 1.22; text-shadow: 0 1px 5px rgba(0,0,0,0.95), 0 0 2px rgba(0,0,0,0.9); }
+.lsig-country { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.lsig-spec { font-size: 13px; color: var(--text-elevated); }
+.lsig-status { margin-top: 2px; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); }
+.lsig--avail .lsig-pin { background: var(--signal); border-color: #fff; box-shadow: 0 0 0 5px color-mix(in srgb, var(--signal) 24%, transparent); }
+.lsig--avail .lsig-status { color: var(--signal); }
+.lsig--planned .lsig-pin { border-style: dashed; opacity: 0.85; }
+.lsig--planned .lsig-country { color: var(--text-elevated); font-weight: 600; }
+.lsig--planned .lsig-spec { color: var(--text-muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .lsig--avail .lsig-pin { animation: lsig-pulse 2.8s ease-out infinite; }
+}
+@keyframes lsig-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 40%, transparent); }
+  70% { box-shadow: 0 0 0 12px color-mix(in srgb, var(--signal) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 0%, transparent); }
+}
 
-.landing-format { margin-top: clamp(44px, 7vw, 88px); }
-.landing-format-h { margin: 0 0 20px; font-size: clamp(16px, 1.5vw, 22px); font-weight: 700; color: var(--text-primary); }
-.landing-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-.landing-step { display: flex; flex-direction: column; gap: 12px; padding: 18px; border: 1px solid var(--border-subtle); border-radius: var(--r-input); background: var(--panel); }
-.landing-step-n { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 13px; color: var(--signal); border: 1px solid var(--signal); }
-.landing-step-t { font-size: 14px; line-height: 1.4; color: var(--text-body); }
+/* Hero message (over the gradient, left). */
+.lhero-content {
+  position: relative; z-index: 3; max-width: 40%;
+  display: flex; flex-direction: column; padding: clamp(28px, 3.4vw, 54px) clamp(20px, 2.6vw, 44px) clamp(70px, 9vh, 104px);
+}
+.lhero-eyebrow { margin: 0 0 clamp(12px, 1.4vw, 20px); font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--signal); }
+.lhero-title { margin: 0; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); font-size: clamp(28px, 3vw, 50px); line-height: 1.05; text-wrap: balance; max-width: 15ch; }
+.lhero-desc { margin: clamp(16px, 1.7vw, 24px) 0 0; max-width: 44ch; font-size: clamp(15px, 1.05vw, 18px); line-height: 1.55; color: var(--text-muted); }
+.lhero-actions { margin: clamp(22px, 2.4vw, 32px) 0 0; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.lhero-cta { white-space: nowrap; }
+.lhero-cta:focus-visible, .lhero-featured:focus-visible, .topbar-atlas:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; border-radius: 6px; }
+/* Featured story — desktop: a quiet single line "Featured story: … →". */
+.lhero-featured { display: inline; font-size: 14px; font-weight: 600; color: var(--text-strong); text-decoration: none; }
+.lhero-featured:hover { color: var(--text-primary); }
+.lhero-featured:hover .lf-title { border-bottom-color: var(--border-strong); }
+.lf-eyebrow::after { content: ":\00a0"; }
+.lf-title { border-bottom: 1px solid transparent; }
+.lf-action-text { display: none; }
+.lf-arrow { padding-left: 6px; }
 
-@media (max-width: 900px) { .landing-steps { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 720px) {
-  .landing-grid { grid-template-columns: 1fr; }
-  .landing-steps { grid-template-columns: 1fr; }
-  .landing-preview { order: -1; }
+/* Meta becomes a compact available/planned legend (text + indicator, not colour-only). */
+.lhero-meta { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; font-family: var(--mono); font-size: 13px; color: var(--text-muted); }
+.lhero-leg { display: inline-flex; align-items: center; gap: 7px; }
+.lhero-leg-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.lhero-leg-dot--avail { background: var(--signal); }
+.lhero-leg-dot--planned { border: 1.5px dashed var(--text-muted); }
+.lhero-prop { position: absolute; left: clamp(20px, 2.6vw, 44px); bottom: clamp(20px, 3vh, 34px); z-index: 3; margin: 0; max-width: 38ch; font-size: clamp(13px, 0.95vw, 15px); line-height: 1.45; color: var(--text-muted); border-left: 2px solid var(--signal); padding-left: 13px; }
+.lhero-prop strong { color: var(--text-elevated); font-weight: 600; }
+
+/* Process rail — an editorial sequence, not cards. */
+.lrail { padding: clamp(26px, 3.4vh, 46px) clamp(20px, 2.6vw, 44px) 0; }
+.lrail-h { margin: 0 0 clamp(22px, 2.4vw, 32px); display: inline-flex; align-items: center; gap: 13px; font-size: 13px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--text-muted); }
+.lrail-h::before { content: ""; width: 24px; height: 2px; background: var(--signal); flex: 0 0 auto; }
+.lrail-list { list-style: none; margin: 0; padding: 0; position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(24px, 3vw, 56px); }
+.lrail-list::before { content: ""; position: absolute; top: clamp(14px, 1vw, 18px); left: 6px; right: 6px; height: 1px; background: var(--border-subtle); }
+.lrail-step { position: relative; }
+.lrail-n { position: relative; display: inline-block; padding-right: 14px; margin-bottom: 14px; font-family: var(--mono); font-size: clamp(20px, 1.8vw, 28px); font-weight: 600; color: var(--signal); background: var(--page); }
+.lrail-t { margin: 0; font-size: clamp(17px, 1.25vw, 21px); font-weight: 700; color: var(--text-primary); }
+.lrail-d { margin: 8px 0 0; max-width: 34ch; font-size: clamp(14px, 1vw, 16px); line-height: 1.5; color: var(--text-muted); }
+
+/* Header atlas action. */
+.topbar-atlas { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; min-height: 40px; padding: 0 6px; font-size: 13px; font-weight: 600; color: var(--text-strong); }
+.topbar-atlas:hover { color: var(--text-primary); }
+
+/* Responsive: below 860 the hero stacks into an editorial column. */
+@media (max-width: 860px) {
+  .lhero { display: flex; flex-direction: column; min-height: 0; border-radius: var(--r-card); }
+  .lhero-content { order: 1; max-width: none; position: static; padding: clamp(22px, 6vw, 34px) clamp(20px, 6vw, 30px) 0; }
+  .lhero-media { order: 2; position: relative; left: 0; right: 0; width: 100%; aspect-ratio: 16 / 10; margin-top: clamp(18px, 4vw, 26px); }
+  .lhero-mapwrap { left: 50%; }
+  .lhero-scrim { display: none; }
+  /* The overlay becomes a compact available/planned country strip below the map. */
+  .lhero-signals { order: 3; position: static; left: auto; transform: none; height: auto; aspect-ratio: auto; display: flex; flex-wrap: wrap; gap: 10px 18px; padding: clamp(14px, 4vw, 20px) clamp(20px, 6vw, 30px) 0; }
+  .lsig { position: static; display: flex; align-items: flex-start; gap: 8px; max-width: none; }
+  .lsig-pin { position: static; transform: none; margin-top: 3px; }
+  .lsig-body { position: static; transform: none !important; }
+  /* Mobile featured story: a compact stacked link (no card, no border). */
+  .lhero-featured { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .lf-eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); font-weight: 600; }
+  .lf-eyebrow::after { content: none; }
+  .lf-title { font-size: 15px; font-weight: 700; color: var(--text-primary); border-bottom: 0; }
+  .lf-action { display: inline-flex; align-items: center; margin-top: 3px; font-size: 14px; color: var(--signal); }
+  .lf-action-text { display: inline; }
+  .lf-arrow { padding-left: 4px; }
+  .lhero-prop { order: 4; position: static; margin: clamp(18px, 5vw, 26px) clamp(20px, 6vw, 30px) 0; max-width: none; }
+  .lrail { padding-top: clamp(28px, 8vw, 44px); }
+  .lrail-list { grid-template-columns: 1fr; gap: 0; }
+  .lrail-list::before { top: 4px; bottom: 4px; left: 13px; right: auto; width: 1px; height: auto; }
+  .lrail-step { padding: 0 0 clamp(22px, 6vw, 30px) 42px; }
+  .lrail-step:last-child { padding-bottom: 0; }
+  .lrail-n { position: absolute; left: 0; top: 0; margin: 0; padding: 0; }
+}
+@media (max-width: 560px) {
+  .topbar-atlas { display: none; }
 }
 
 /* ---- Map-first Atlas --------------------------------------------- */

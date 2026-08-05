@@ -42,30 +42,134 @@ const atlasHtml = renderToStaticMarkup(<AtlasIndexPage />);
 
 const BANNED = ['world leader', 'dominant industry', 'leadership score', 'epistemic', 'evidence mode'];
 
-describe('Landing page (/)', () => {
-  it('presents the product hero and a single "Explore the atlas" CTA into /atlas', () => {
+describe('Landing page (/) — Stage 10.2 art direction', () => {
+  const layoutSrc = readFileSync(join(process.cwd(), 'app/layout.tsx'), 'utf8');
+  const cssSrc = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8');
+
+  it('leads with the eyebrow + the editorial-documentary title/description (no ranking language)', () => {
     expect(landingHtml).toContain('WHY HERE?');
-    expect(landingHtml).toContain('What do different countries become exceptionally good at — and why?');
-    expect(landingHtml).toContain('Explore how industries work and how companies, institutions and historical decisions shaped national strengths.');
-    // primary CTA text + destination
-    expect(landingHtml).toMatch(/href="\/atlas"[^>]*>Explore the atlas</);
+    expect(landingHtml).toContain('Why do industries take root in particular places?');
+    expect(landingHtml).toContain('Explore the firms, institutions and historical decisions behind national industrial strengths.');
+    for (const w of ['world-class', 'world leader', 'dominant', 'Why do countries excel']) expect(landingHtml).not.toContain(w);
   });
 
-  it('shows the case counts and a plain-language format explanation', () => {
-    expect(landingHtml).toContain('1 investigation available · 2 planned');
-    for (const step of ['Choose a country', 'Discover what it became exceptionally good at', 'Understand the industry', 'Explore how that strength developed']) {
-      expect(landingHtml).toContain(step);
+  it('renders the REAL generated atlas map as a local next/image (no external request)', () => {
+    expect(landingHtml).toMatch(/\/_next\/image\?url=%2Flanding%2Fatlas-world\.webp/);
+    expect(landingHtml).toContain('lhero-img');
+    expect(landingHtml).toMatch(/alt="A world map from the Why Here\? atlas[^"]*"/);
+    expect(landingHtml).not.toMatch(/src="https?:\/\//);
+  });
+
+  it('the old hand-drawn continent preview is completely gone', () => {
+    for (const gone of ['lp-map', 'lp-land', 'lp-card', 'lp-marker', 'lp-lead', 'lp-legend', 'lmp-svg', 'lp-mlabel']) {
+      expect(landingHtml).not.toContain(gone);
     }
   });
 
-  it('does NOT put the Netherlands featured investigation (or its story) before the CTA', () => {
-    // the landing must not duplicate the case story or its atlas summary question
-    expect(landingHtml).not.toContain('Featured investigation');
-    expect(landingHtml).not.toContain(NL_QUESTION);
-    expect(landingHtml).not.toContain('Explore the story');
-    expect(landingHtml).not.toContain('View sources');
-    // the CTA appears before the "How it works" format section
-    expect(landingHtml.indexOf('Explore the atlas')).toBeLessThan(landingHtml.indexOf('How it works'));
+  it('has exactly ONE primary hero button (Explore the atlas -> /atlas) + a secondary featured link', () => {
+    expect((landingHtml.match(/class="btn btn-primary lhero-cta"/g) ?? []).length).toBe(1);
+    expect(landingHtml).toMatch(/class="btn btn-primary lhero-cta" href="\/atlas">Explore the atlas</);
+    // one semantic featured-story link into the NL Explore route
+    expect(landingHtml).toMatch(/class="lhero-featured" href="\/atlas\/netherlands-semiconductor-equipment"/);
+    const hero = landingHtml.slice(landingHtml.indexOf('class="lhero"'), landingHtml.indexOf('class="lrail"'));
+    expect((hero.match(/class="btn /g) ?? []).length).toBe(1);
+  });
+
+  it('the featured story is a compact stacked link (eyebrow / title / action), not a card', () => {
+    const link = landingHtml.match(/<a class="lhero-featured" href="\/atlas\/netherlands-semiconductor-equipment">[\s\S]*?<\/a>/)?.[0] ?? '';
+    expect(link).toContain('class="lf-eyebrow">Featured story');
+    expect(link).toContain('class="lf-title">Netherlands × Semiconductor lithography');
+    expect(link).toContain('class="lf-action-text">Explore story');
+    // it is a link, never a bordered/filled card
+    expect(landingHtml).not.toMatch(/class="lhero-featured"[^>]*style=/);
+  });
+
+  it('shows an accessible available/planned legend (text + indicator, not colour only)', () => {
+    // each count is preceded by its status indicator, and is real text (SR-readable)
+    expect(landingHtml).toMatch(/lhero-leg-dot--avail[\s\S]{0,40}?1 story available/);
+    expect(landingHtml).toMatch(/lhero-leg-dot--planned[\s\S]{0,40}?2 planned/);
+    expect(landingHtml).toContain('1 story available');
+    expect(landingHtml).toContain('2 planned');
+  });
+
+  it('overlays country signals: Netherlands available, Taiwan & France planned (accessible list)', () => {
+    expect(landingHtml).toMatch(/<ul class="lhero-signals" aria-label="Countries in the atlas"/);
+    expect(landingHtml).toMatch(/class="lsig lsig--avail"[^]*?Netherlands[^]*?Lithography equipment[^]*?Story available/);
+    expect(landingHtml).toMatch(/class="lsig lsig--planned"[^]*?France[^]*?Luxury[^]*?Planned/);
+    expect(landingHtml).toMatch(/class="lsig lsig--planned"[^]*?Taiwan[^]*?Semiconductor manufacturing[^]*?Planned/);
+  });
+
+  it('the process rail has exactly three ordered steps (no bordered How-it-works cards)', () => {
+    const iOne = landingHtml.indexOf('Choose a country');
+    const iTwo = landingHtml.indexOf('Understand the industry');
+    const iThree = landingHtml.indexOf('Trace how the strength developed');
+    expect(iOne).toBeGreaterThan(-1);
+    expect(iOne).toBeLessThan(iTwo);
+    expect(iTwo).toBeLessThan(iThree);
+    for (const n of ['01', '02', '03']) expect(landingHtml).toContain(`>${n}</span>`);
+    expect((landingHtml.match(/class="lrail-step"/g) ?? []).length).toBe(3);
+    for (const gone of ['lhow-step', 'lhow-list', 'Follow the story', 'Discover what it became']) expect(landingHtml).not.toContain(gone);
+  });
+
+  it('integrates the project proposition inside the hero (not an isolated band)', () => {
+    expect(landingHtml).toContain('Geography explains where industries are.');
+    expect(landingHtml).toContain('Why Here? investigates why they took root there.');
+    expect(landingHtml).toContain('lhero-prop');
+  });
+
+  it('keeps the shared header subtitle and adds one atlas action', () => {
+    expect(layoutSrc).toContain('Atlas of Industrial Strengths');
+    expect(layoutSrc).not.toContain('Atlas of Industrial Advantage');
+    expect(layoutSrc).toMatch(/className="topbar-atlas"[^>]*>Open atlas/);
+  });
+
+  it('ships reduced-motion-safe signal styling', () => {
+    expect(cssSrc).toMatch(/@media \(prefers-reduced-motion: no-preference\)[\s\S]*\.lsig--avail \.lsig-pin \{[^}]*animation/);
+  });
+
+  it('keeps landing copy free of research jargon / leadership claims', () => {
+    for (const term of ['well_supported', 'epistemicStatus', 'ClaimPlaceLink', 'nl-f-']) expect(landingHtml).not.toContain(term);
+    const lower = landingHtml.toLowerCase();
+    for (const phrase of BANNED) expect(lower).not.toContain(phrase);
+  });
+});
+
+describe('Landing Taiwan overlay — measured geographic anchor', () => {
+  const pageSrc = readFileSync(join(process.cwd(), 'app/page.tsx'), 'utf8');
+  const cssSrc = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8');
+
+  it('Taiwan coordinates come from the typed overlay record (measured asset %, not a hero guess)', () => {
+    // a typed record with a separate geographic anchor and label offset
+    expect(pageSrc).toMatch(/interface CountrySignal\b[\s\S]*?xPercent: number;[\s\S]*?labelOffsetX: number/);
+    // Taiwan's slug carries the measured anchor percentages
+    expect(pageSrc).toMatch(/slug:\s*'taiwan-semiconductor-manufacturing'[\s\S]*?xPercent:\s*79\.8[\s\S]*?yPercent:\s*62\.61/);
+  });
+
+  it('the geographic anchor and label offset are SEPARATE values', () => {
+    expect(pageSrc).toMatch(/labelOffsetX:\s*\d/);
+    expect(pageSrc).toMatch(/labelOffsetY:\s*-?\d/);
+    // the <li> is placed by the anchor (left/top); the label body only by a transform
+    expect(landingHtml).toMatch(/class="lsig lsig--planned" style="left:79\.8%;top:62\.61%">/);
+    const tw = landingHtml.match(/style="left:79\.8%;top:62\.61%">[\s\S]*?<\/li>/)?.[0] ?? '';
+    expect(tw).toContain('Taiwan');
+    // the label carries its OWN offset transform (a right-edge country pulls the
+    // text off the map edge) — a non-zero px translate distinct from the anchor
+    const twOffset = tw.match(/class="lsig-body" style="transform:translate\((-?\d+)px, ?(-?\d+)px\)"/);
+    expect(twOffset).not.toBeNull();
+    expect(Math.abs(Number(twOffset![1])) + Math.abs(Number(twOffset![2]))).toBeGreaterThan(0);
+  });
+
+  it('the old hard-coded Taiwan position (86% / 63%) is absent from the component and CSS', () => {
+    expect(pageSrc).not.toContain("'86%'");
+    expect(pageSrc).not.toContain("'63%'");
+    // no country coordinate lives in the stylesheet at all
+    expect(cssSrc).not.toContain('86%');
+    expect(cssSrc).not.toContain('79.8');
+    expect(cssSrc).not.toContain('62.61');
+  });
+
+  it('Taiwan remains Planned', () => {
+    expect(landingHtml).toMatch(/class="lsig lsig--planned"[\s\S]*?Taiwan[\s\S]*?Semiconductor manufacturing[\s\S]*?Planned/);
   });
 });
 

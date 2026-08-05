@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   // Absolute base for canonical URLs + Open Graph / Twitter images (Stage 7.1).
   // Resolves NEXT_PUBLIC_SITE_URL → Vercel production domain → localhost.
   metadataBase: new URL(siteOrigin()),
-  title: 'Why Here? — An Atlas of Industrial Advantage',
+  title: 'Why Here? — An Atlas of Industrial Strengths',
   description:
     'An evidence-based research instrument for how industrial advantage forms across places and over time.',
 };
@@ -31,7 +31,8 @@ export default function RootLayout({
           <Link href="/" className="wordmark">
             Why Here<span className="dot">.</span>
           </Link>
-          <span className="tagline">Atlas of Industrial Advantage</span>
+          <span className="tagline">Atlas of Industrial Strengths</span>
+          <Link href="/atlas" className="topbar-atlas">Open atlas <span aria-hidden="true">→</span></Link>
         </nav>
         <main className="wrap">{children}</main>
       </body>
