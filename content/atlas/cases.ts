@@ -58,10 +58,14 @@ export const atlasCases: AtlasCase[] = [
     industry: 'Semiconductor manufacturing',
     title: 'Taiwan × Semiconductor Manufacturing',
     shortQuestion:
-      'How did Taiwan develop its semiconductor manufacturing industry?',
+      'How did Taiwan develop its strength in semiconductor foundry manufacturing?',
+    // Stage 11A: an evidence foundation exists in the research corpus (a
+    // `research` case with verified claims, no thesis, no chapters), but the
+    // public Atlas stays `planned` with no modes — no story is launched.
     summary:
-      'Planned research into the firms, institutions and industrial conditions that ' +
-      "shaped Taiwan's semiconductor manufacturing sector.",
+      'Semiconductor foundries manufacture chips designed by other companies. Research ' +
+      'is under way into the firms, institutions and technology transfers behind ' +
+      "Taiwan's advanced foundry manufacturing; no public story has been published yet.",
     status: 'planned',
     navigationGeometry: {
       type: 'point',

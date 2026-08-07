@@ -19,9 +19,13 @@ export const countryPresentations: CountryPresentation[] = [
     question: 'How did the Netherlands develop its strength in semiconductor lithography equipment?',
   },
   {
+    // Stage 11A framing: the case concerns dedicated (pure-play) foundry
+    // manufacturing specifically, not the whole semiconductor value chain — and
+    // not (yet) advanced-node leadership, which no evidence pack documents. The
+    // word "advanced" is deliberately absent from the public specialisation.
     slug: 'taiwan-semiconductor-manufacturing',
-    specialisation: 'Semiconductor manufacturing',
-    question: 'How did Taiwan develop its semiconductor manufacturing industry?',
+    specialisation: 'Semiconductor foundry manufacturing',
+    question: 'How did Taiwan develop its strength in semiconductor foundry manufacturing?',
   },
   {
     slug: 'france-luxury',

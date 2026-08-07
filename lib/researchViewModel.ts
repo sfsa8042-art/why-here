@@ -25,6 +25,28 @@ import type {
 } from './schemas.ts';
 
 /* ------------------------------------------------------------------ *
+ * Case-scoping (generic, corpus-agnostic)
+ * ------------------------------------------------------------------ */
+
+/**
+ * The distinct source ids cited by a set of claims. This is the case-scoping
+ * key for the Evidence workspace: the production corpus is SHARED across cases
+ * (Netherlands, Taiwan, …), so a workspace must show only the sources ITS OWN
+ * claims cite — never the global source list. Generic and pure: it depends only
+ * on the claims passed in, so adding a new case (or new global sources) cannot
+ * change another case's scoped source set.
+ */
+export function citedSourceIdsForClaims(
+  claims: ReadonlyArray<{ citations: ReadonlyArray<{ sourceId: string }> }>,
+): Set<string> {
+  const ids = new Set<string>();
+  for (const claim of claims) {
+    for (const citation of claim.citations) ids.add(citation.sourceId);
+  }
+  return ids;
+}
+
+/* ------------------------------------------------------------------ *
  * View types
  * ------------------------------------------------------------------ */
 
@@ -309,21 +331,29 @@ export function buildNetherlandsResearchView(
     };
   });
 
-  const sources: SourceView[] = result.corpus.sources.map((s): SourceView => {
-    const view: SourceView = {
-      id: s.id,
-      title: s.title,
-      byline: sourceByline(s),
-      sourceType: s.sourceType,
-      temporalRelation: s.temporalRelation,
-      subjectRelationship: s.subjectRelationship,
-      citedByCount: citedBy.get(s.id) ?? 0,
-      dependsOn: s.derivedFromSourceIds ?? [],
-      note: SOURCE_NOTES[s.id] ?? '',
-    };
-    if (s.date !== undefined) view.date = s.date;
-    return view;
-  });
+  // Case-scoped: only the sources this case's claims actually cite. The corpus
+  // is shared across cases (Netherlands, Taiwan, …), so a global source list
+  // would leak other cases' sources into this workspace. Derived generically
+  // from this case's claims (not from a global list), so another case's sources
+  // can never appear here.
+  const citedIds = citedSourceIdsForClaims(module.claims);
+  const sources: SourceView[] = result.corpus.sources
+    .filter((s) => citedIds.has(s.id))
+    .map((s): SourceView => {
+      const view: SourceView = {
+        id: s.id,
+        title: s.title,
+        byline: sourceByline(s),
+        sourceType: s.sourceType,
+        temporalRelation: s.temporalRelation,
+        subjectRelationship: s.subjectRelationship,
+        citedByCount: citedBy.get(s.id) ?? 0,
+        dependsOn: s.derivedFromSourceIds ?? [],
+        note: SOURCE_NOTES[s.id] ?? '',
+      };
+      if (s.date !== undefined) view.date = s.date;
+      return view;
+    });
 
   const caseEntity = module.case;
   return {
@@ -337,7 +367,7 @@ export function buildNetherlandsResearchView(
       id: q.id,
       question: q.question,
     })),
-    sourceCount: result.corpus.sources.length,
+    sourceCount: citedIds.size,
     claimCount: module.claims.length,
     mappedAddressCount: (module.claimPlaceLinks ?? []).length,
     hasThesis: 'thesisClaimId' in caseEntity,

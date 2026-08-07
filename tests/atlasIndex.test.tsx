@@ -242,8 +242,8 @@ describe('Atlas country summary (opens on selection)', () => {
   it('Taiwan: planned summary with specialisation + question, status "Research planned", and NO CTAs', () => {
     const html = renderToStaticMarkup(<CountrySummary c={tw} view={twView} onClose={noop} />);
     expect(html).toContain('Taiwan');
-    expect(html).toContain('Semiconductor manufacturing');
-    expect(html).toContain('How did Taiwan develop its semiconductor manufacturing industry?');
+    expect(html).toContain('Semiconductor foundry manufacturing');
+    expect(html).toContain('How did Taiwan develop its strength in semiconductor foundry manufacturing?');
     expect(html).toContain('Research planned');
     expect(html).not.toContain('Explore the story');
     expect(html).not.toContain('View sources');
@@ -336,8 +336,8 @@ describe('Atlas country presentation resolves from the typed content layer', () 
 
   it('planned countries resolve specialisation + question but carry no reading meta', () => {
     const twv = buildCountrySummaryView('taiwan-semiconductor-manufacturing')!;
-    expect(twv.specialisation).toBe('Semiconductor manufacturing');
-    expect(twv.question).toBe('How did Taiwan develop its semiconductor manufacturing industry?');
+    expect(twv.specialisation).toBe('Semiconductor foundry manufacturing');
+    expect(twv.question).toBe('How did Taiwan develop its strength in semiconductor foundry manufacturing?');
     expect(twv.chapters).toBeUndefined();
   });
 

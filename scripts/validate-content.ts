@@ -26,6 +26,7 @@ import { validateAtlasPreviews } from '../lib/atlasPreview.ts';
 import { atlasPreviews } from '../content/atlas/previews.ts';
 import { validateCountryPresentations } from '../lib/atlasPresentation.ts';
 import { countryPresentations } from '../content/atlas/presentation.ts';
+import { taiwanResearchGuardFailures } from '../lib/taiwanResearchGuard.ts';
 
 const loaded = loadCorpus(productionRegistry);
 
@@ -90,6 +91,15 @@ const presentationFailures = validateCountryPresentations(countryPresentations, 
 if (presentationFailures.length > 0) {
   for (const f of presentationFailures) console.error(`${f.ruleId} ${f.slug}: ${f.message}`);
   console.error(`validate-content: ${presentationFailures.length} country-presentation failure(s).`);
+  process.exit(1);
+}
+
+// Taiwan research-foundation guard (Stage 11A) — build-blocking invariants that
+// keep Taiwan an un-launched research foundation (TW1–TW12).
+const taiwanFailures = taiwanResearchGuardFailures(corpus, getAtlasCases());
+if (taiwanFailures.length > 0) {
+  for (const f of taiwanFailures) console.error(`${f.ruleId} ${f.entityId}: ${f.message}`);
+  console.error(`validate-content: ${taiwanFailures.length} Taiwan-guard failure(s).`);
   process.exit(1);
 }
 
